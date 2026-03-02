@@ -19,7 +19,7 @@
 > You can train and test LarNO with **a single GPU** by renting one on [AutoDL](https://www.autodl.com/) for as little as ¥1–3/hour — no local hardware required.
 > A full step-by-step guide using the browser-based JupyterLab is provided in [Section 13 — Cloud GPU: AutoDL Guide](#13-cloud-gpu--autodl-guide). No extra software installation needed.
 >
-> **Before you start:** download the dataset to your local machine first (see [Section 2 — Datasets](#2-datasets)), as uploading data to the cloud is typically the longest step.
+> **Before you start:** download the dataset (see [Section 2 — Datasets](#2-datasets)) and pre-trained weights (see [Section 3 — Pre-trained Weights](#3-pre-trained-weights)) to your local machine first.
 
 ---
 
