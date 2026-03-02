@@ -3,6 +3,7 @@ import sys
 import argparse
 import datetime
 import math
+from collections import OrderedDict
 
 import torch
 import torch.distributed as dist
@@ -160,6 +161,11 @@ if __name__ == "__main__":
                 f"Pretrained weights not found: {pretrained_path}")
         print(f"Loading pretrained weights from: {pretrained_path}")
         state_dict = torch.load(pretrained_path, map_location=device)
+        # Strip DDP 'module.' prefix if the checkpoint was saved with DistributedDataParallel
+        state_dict = OrderedDict(
+            (k[7:] if k.startswith("module.") else k, v)
+            for k, v in state_dict.items()
+        )
         model.load_state_dict(state_dict)
         print("Pretrained weights loaded successfully.")
 
