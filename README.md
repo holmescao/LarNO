@@ -730,17 +730,17 @@ pip install tensorly tensorly-torch "torch-harmonics==0.7.3" \
 Upload to the cloud instance via SCP, then unzip:
 
 ```bash
-scp -P 27407 /path/to/futian_weights.zip root@connect.westb.seetacloud.com:/root/autodl-tmp/
+scp -P 27407 /path/to/exp.zip root@connect.westb.seetacloud.com:/root/autodl-tmp/
 # In JupyterLab terminal:
-cd /root/autodl-tmp/ && unzip futian_weights.zip -d LarNO/
+cd /root/autodl-tmp/ && unzip exp.zip -d LarNO/
 ls LarNO/exp/   # verify the checkpoint directory exists
 ```
 
 > 💡 Or download directly on the server with `gdown` if Google Drive is reachable:
 > ```bash
 > pip install gdown -q
-> gdown <file_id> -O /root/autodl-tmp/futian_weights.zip
-> cd /root/autodl-tmp/ && unzip futian_weights.zip -d LarNO/
+> gdown <file_id> -O /root/autodl-tmp/exp.zip
+> cd /root/autodl-tmp/ && unzip exp.zip -d LarNO/
 > ```
 
 ---
