@@ -61,11 +61,11 @@ default: &DEFAULT
     finetune_lifting_only: True
     wall_height: 50  # DEM value assigned to buildings/borders - must exceed real terrain max (metres)
 
-  # Pre-trained model fine-tuning
+  # Pre-trained model (region1_20m)
   finetune:
     enabled: True
-    pretrained_dir: "../../exp/20251025_184115_247446/weights/model_epoch_978_error@0.000021595"
-    state_dict_name: "model_epoch_978_error@0.000021595_state_dict.pt"
+    pretrained_dir: "../../exp/20260220_183648_006352/weights/model_epoch_992_error@0.000055821"
+    state_dict_name: "model_epoch_992_error@0.000055821_state_dict.pt"
 
   # Optimizer and scheduler
   opt:

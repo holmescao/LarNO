@@ -17,7 +17,7 @@
 
 > 🚀 **New to deep learning or don't have a GPU?**
 > You can train and test LarNO with **a single GPU** by renting one on [AutoDL](https://www.autodl.com/) for as little as ¥1–3/hour — no local hardware required.
-> A full step-by-step guide using the browser-based JupyterLab is provided in [Section 12 — Cloud GPU: AutoDL Guide](#12-cloud-gpu--autodl-guide). No extra software installation needed.
+> A full step-by-step guide using the browser-based JupyterLab is provided in [Section 13 — Cloud GPU: AutoDL Guide](#13-cloud-gpu--autodl-guide). No extra software installation needed.
 >
 > **Before you start:** download the dataset to your local machine first (see [Section 2 — Datasets](#2-datasets)), as uploading data to the cloud is typically the longest step.
 
@@ -51,19 +51,20 @@
 
 1. [Installation](#1-installation)
 2. [Datasets](#2-datasets)
-3. [Choosing a Configuration](#3-choosing-a-configuration)
-4. [Quick Test with Pre-trained Weights (region1)](#4-quick-test-with-pre-trained-weights-region1)
-5. [Scenario A — Fine-tune on UKEA (Recommended)](#5-scenario-a--fine-tune-on-ukea-recommended)
-6. [Scenario B — Train UKEA from Scratch](#6-scenario-b--train-ukea-from-scratch)
-7. [Scenario C — Train Futian / Custom Dataset from Scratch](#7-scenario-c--train-futian--custom-dataset-from-scratch)
-8. [Evaluation](#8-evaluation)
-9. [Outputs and Metrics](#9-outputs-and-metrics)
-10. [Configuration Reference](#10-configuration-reference)
-11. [Project Structure](#11-project-structure)
-12. [Cloud GPU — AutoDL Guide](#12-cloud-gpu--autodl-guide)
-13. [License](#13-license)
-14. [FAQ](#14-faq)
-15. [Citation](#15-citation)
+3. [Pre-trained Weights](#3-pre-trained-weights)
+4. [Choosing a Configuration](#4-choosing-a-configuration)
+5. [Quick Test with Pre-trained Weights (region1)](#5-quick-test-with-pre-trained-weights-region1)
+6. [Scenario A — Fine-tune on UKEA (Recommended)](#6-scenario-a--fine-tune-on-ukea-recommended)
+7. [Scenario B — Train UKEA from Scratch](#7-scenario-b--train-ukea-from-scratch)
+8. [Scenario C — Train Futian / Custom Dataset from Scratch](#8-scenario-c--train-futian--custom-dataset-from-scratch)
+9. [Evaluation](#9-evaluation)
+10. [Outputs and Metrics](#10-outputs-and-metrics)
+11. [Configuration Reference](#11-configuration-reference)
+12. [Project Structure](#12-project-structure)
+13. [Cloud GPU — AutoDL Guide](#13-cloud-gpu--autodl-guide)
+14. [License](#14-license)
+15. [FAQ](#15-faq)
+16. [Citation](#16-citation)
 
 ---
 
@@ -181,7 +182,50 @@ configs/
 
 ---
 
-## 3. Choosing a Configuration
+## 3. Pre-trained Weights
+
+LarNO provides a **Futian (region1_20m) pre-trained checkpoint**, trained to paper accuracy on the Shenzhen case study. This checkpoint is used for:
+
+- **Quick Test** ([Section 5](#5-quick-test-with-pre-trained-weights-region1)) — run inference on region1 immediately, no training required
+- **Scenario A** ([Section 6](#6-scenario-a--fine-tune-on-ukea-recommended)) — fine-tune on UKEA in just 100 epochs
+
+### Architecture
+
+The checkpoint uses the following architecture. Any config that loads it **must match these values exactly**; changing them will cause a weight-shape mismatch error.
+
+| Parameter | Value |
+|---|---|
+| `hidden_channels` | 32 |
+| `n_modes_height` | 100 |
+| `n_modes_width` | 140 |
+| `n_layers` | 4 |
+
+### Download
+
+| Mirror | Link |
+|---|---|
+| Google Drive | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
+| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) |
+
+### Placement
+
+📁 Extract and place the checkpoint under the `exp/` directory:
+
+```
+LarNO/
+└── exp/
+    └── <expr_id>/                           ← e.g. 20260220_183648_006352
+        └── weights/
+            └── <checkpoint_name>/           ← e.g. model_epoch_978_error@0.000021595
+                └── <checkpoint_name>_state_dict.pt
+```
+
+- For **Quick Test**: the path is already embedded in `configs/urbanflood_config_2d.yaml` — no manual editing needed.
+- For **Scenario A**: update the `finetune` block in `configs/ukea_finetune.yaml` with your actual `<expr_id>` and `<checkpoint_name>` (see [Section 6](#6-scenario-a--fine-tune-on-ukea-recommended)).
+
+---
+
+## 4. Choosing a Configuration
 
 All hyperparameters are controlled by a **YAML config file** in `configs/`. Three ready-to-use configs are provided. Pass the desired file with `--config`:
 
@@ -206,11 +250,11 @@ python test.py  --config <yaml_file>   # evaluation
 
 ---
 
-## 4. Quick Test with Pre-trained Weights (region1)
+## 5. Quick Test with Pre-trained Weights (region1)
 
 Before spending time on training, first verify that your installation works by running **inference on the Futian (region1_20m) test set** using the pre-trained Futian weights. This takes about **3 minutes** and produces flood maps and metrics immediately.
 
-**Prerequisites:** complete Sections 1–2 (installation + dataset). The pre-trained weight path is already embedded in `configs/urbanflood_config_2d.yaml` — no manual editing of paths is needed.
+**Prerequisites:** complete Sections 1–3 (installation, dataset, pre-trained weights). The pre-trained weight path is already embedded in `configs/urbanflood_config_2d.yaml` — no manual editing of paths is needed.
 
 ### Step 1 — Verify the config
 
@@ -251,28 +295,13 @@ Results are saved to `exp/<new_timestamp>/`:
 
 ---
 
-## 5. Scenario A — Fine-tune on UKEA (Recommended)
+## 6. Scenario A — Fine-tune on UKEA (Recommended)
 
 > Uses `configs/ukea_finetune.yaml` — the default config.
 
-### Step 1 — Download Futian pre-trained weights
+### Step 1 — Download pre-trained weights
 
-📥 Download the Futian (`region1_20m`) pre-trained checkpoint:
-
-| Mirror | Link |
-|---|---|
-| Google Drive | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
-| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) |
-
-📁 Place the checkpoint at:
-
-```
-exp/
-└── <expr_id>/
-    └── weights/
-        └── <checkpoint_name>/
-            └── <checkpoint_name>_state_dict.pt
-```
+See [Section 3 — Pre-trained Weights](#3-pre-trained-weights) for download links and placement instructions.
 
 ### Step 2 — Edit the config
 
@@ -310,7 +339,7 @@ python test.py --config ukea_finetune.yaml --expr_id <timestamp>
 
 ---
 
-## 6. Scenario B — Train UKEA from Scratch
+## 7. Scenario B — Train UKEA from Scratch
 
 > Uses `configs/ukea_scratch.yaml`. No pre-trained weights required.
 
@@ -355,13 +384,13 @@ python test.py --config ukea_scratch.yaml --expr_id <timestamp>
 
 ---
 
-## 7. Scenario C — Train Futian / Custom Dataset from Scratch
+## 8. Scenario C — Train Futian / Custom Dataset from Scratch
 
 > Uses `configs/region1_scratch.yaml`. For the Futian dataset or your own large-scale study area.
 
 ### Step 1 — Prepare your event lists
 
-✏️ Fill in `configs/region1_train.txt` and `configs/region1_test.txt` with your event names (one event name per line), matching the sub-folder names under `benchmark/urbanflood/flood/<location>/`.
+✏️ Fill in `configs/region1_fulltrain.txt` (or `region1_smalltrain.txt`) and `configs/region1_test.txt` with your event names (one event name per line), matching the sub-folder names under `benchmark/urbanflood/flood/<location>/`.
 
 ### Step 2 — Edit the config
 
@@ -423,7 +452,7 @@ python test.py --config region1_scratch.yaml --expr_id <timestamp>
 
 ---
 
-## 8. Evaluation
+## 9. Evaluation
 
 💻 From `code/urbanflood_larfno/`:
 
@@ -459,7 +488,7 @@ exp/<timestamp>/
 
 ---
 
-## 9. Outputs and Metrics
+## 10. Outputs and Metrics
 
 ### Flood maps and animations (`visualization/`)
 
@@ -483,7 +512,7 @@ One Excel file per location, one row per event, plus an overall mean ± std row.
 
 ---
 
-## 10. Configuration Reference
+## 11. Configuration Reference
 
 ### Config files overview
 
@@ -551,7 +580,7 @@ distributed:
 
 ---
 
-## 11. Project Structure
+## 12. Project Structure
 
 ```
 LarNO/
@@ -584,10 +613,11 @@ LarNO/
     │   ├── ukea_finetune.yaml          ← Scenario A: fine-tune UKEA (default)
     │   ├── ukea_scratch.yaml           ← Scenario B: train UKEA from scratch
     │   ├── region1_scratch.yaml        ← Scenario C: train Futian / custom
-    │   ├── ukea_train.txt              ← UKEA training events (8 events)
-    │   ├── ukea_test.txt               ← UKEA test events (12 events)
-    │   ├── region1_train.txt           ← Futian training events (fill in)
-    │   └── region1_test.txt            ← Futian test events (fill in)
+    │   ├── ukea_train.txt              ← UKEA training events (16 events)
+    │   ├── ukea_test.txt               ← UKEA test events (4 events)
+    │   ├── region1_fulltrain.txt       ← Futian training events (64 events)
+    │   ├── region1_smalltrain.txt      ← Futian training events subset (16 events)
+    │   └── region1_test.txt            ← Futian test events (16 events)
     │
     ├── utils/
     │   ├── torch_utils.py
@@ -603,7 +633,7 @@ LarNO/
 
 ---
 
-## 12. Cloud GPU — AutoDL Guide
+## 13. Cloud GPU — AutoDL Guide
 
 If you do not have a local GPU, you can rent one from [AutoDL](https://www.autodl.com/) for approximately ¥1–3 per hour. The guide below uses the **browser-based JupyterLab** — no extra software needed on your local machine.
 
@@ -615,7 +645,7 @@ If you do not have a local GPU, you can rent one from [AutoDL](https://www.autod
 
 1. Register and log in at [https://www.autodl.com/](https://www.autodl.com/).
 2. Click **租用 → GPU 云服务器**.
-3. Choose a with **≥ 8 GB VRAM** (e.g., RTX 3090 24 GB, RTX 4090 24 GB).
+3. Choose a card with **≥ 8 GB VRAM** (e.g., RTX 3090 24 GB, RTX 4090 24 GB).
 4. Select the base image:
    - **RTX 4090 recommended:** `PyTorch 2.5.1 → Python 3.12(ubuntu22.04) → CUDA 12.4`
    - Other cards: any PyTorch ≥ 2.1 with matching CUDA is fine — we install neuralop dependencies with `--no-deps` so PyTorch is not upgraded automatically.
@@ -723,8 +753,6 @@ ls LarNO/exp/   # verify the checkpoint directory exists
 
 This step takes about **3 minutes** and verifies that the model, dataset, and weights are all loaded correctly. Use `urbanflood_config_2d.yaml` — it already has the pre-trained weight path embedded and is configured for region1.
 
-> 💡 **New user tip:** Always run inference first before training. It's fast, shows you what the model can predict, and confirms everything is working correctly.
-
 **First**, confirm the config values are correct in `configs/urbanflood_config_2d.yaml`:
 
 ```yaml
@@ -733,7 +761,7 @@ tfno2d:
 
 data:
   train_location: "region1_20m"
-  train_list: "region1_train.txt"
+  train_list: "region1_fulltrain.txt"
   test_list: "region1_test.txt"
 
 eval:
@@ -814,17 +842,17 @@ zip -r exp_results.zip exp/
 
 ---
 
-## 13. License
+## 14. License
 
 This project is released under the [MIT License](LICENSE).
 
 ---
 
-## 14. FAQ
+## 15. FAQ
 
 **Q: Which scenario should I start with?**
 
-A: **Quick Test first** ([Section 4](#4-quick-test-with-pre-trained-weights-region1)) — run inference on region1 in 3 minutes using `urbanflood_config_2d.yaml` to confirm everything works. Then try **Scenario A (`ukea_finetune.yaml`)** — fine-tuning from the Futian pre-trained model converges in 100 epochs and gives good results on UKEA. Only move to Scenario B (scratch) if you want to explore UKEA-specific architectures.
+A: **Quick Test first** ([Section 5](#5-quick-test-with-pre-trained-weights-region1)) — run inference on region1 in 3 minutes using `urbanflood_config_2d.yaml` to confirm everything works. Then try **Scenario A (`ukea_finetune.yaml`)** — fine-tuning from the Futian pre-trained model converges in 100 epochs and gives good results on UKEA. Only move to Scenario B (scratch) if you want to explore UKEA-specific architectures.
 
 **Q: Why does `ukea_finetune.yaml` use `n_modes = 100 × 140` when the UKEA grid is only 50 × 120?**
 
@@ -832,7 +860,7 @@ A: The FNO spectral layer weight tensors are sized by `n_modes`. To load the Fut
 
 **Q: My GPU has only 6 GB VRAM. Can I still train?**
 
-A: Yes, on UKEA. Use `ukea_scratch.yaml` — its default lightweight architecture (12×30 modes, 16 channels, 2 layers) fits in 6 GB. For Futian (400×560 grid), you likely need ≥ 8 GB VRAM. Consider renting a cloud GPU ([Section 12](#12-cloud-gpu--autodl-guide)).
+A: Yes, on UKEA. Use `ukea_scratch.yaml` — its default lightweight architecture (12×30 modes, 16 channels, 2 layers) fits in 6 GB. For Futian (400×560 grid), you likely need ≥ 8 GB VRAM. Consider renting a cloud GPU ([Section 13](#13-cloud-gpu--autodl-guide)).
 
 **Q: How do I add my own study area?**
 
@@ -864,7 +892,7 @@ A: Several options, from easiest to most impactful:
 
 **Q: Can I run multi-GPU training on Windows?**
 
-A: Not easily — NCCL is not supported on Windows. Use a Linux cloud instance ([Section 12](#12-cloud-gpu--autodl-guide)).
+A: Not easily — NCCL is not supported on Windows. Use a Linux cloud instance ([Section 13](#13-cloud-gpu--autodl-guide)).
 
 **Q: What does `wall_height: 50` mean?**
 
@@ -880,7 +908,7 @@ A: The images are tracked in git under `code/urbanflood_larfno/assets/`. If they
 
 ---
 
-## 15. Citation
+## 16. Citation
 
 If you use LarNO in your research, please cite:
 

@@ -64,11 +64,11 @@ default: &DEFAULT
     finetune_lifting_only: True   # only update the input lifting layer
     wall_height: 50  # DEM value assigned to buildings/borders (metres)
 
-  # Pre-trained model (region1_20m) — fill in after downloading weights
+  # Pre-trained model (region1_20m)
   finetune:
     enabled: True
-    pretrained_dir: "../../exp/<expr_id>/weights/<checkpoint_name>"
-    state_dict_name: "<checkpoint_name>_state_dict.pt"
+    pretrained_dir: "../../exp/20260220_183648_006352/weights/model_epoch_992_error@0.000055821"
+    state_dict_name: "model_epoch_992_error@0.000055821_state_dict.pt"
 
   # Optimizer and scheduler
   opt:
