@@ -1,0 +1,12 @@
+# Normalize line endings: repo stores LF, Windows checks out CRLF
+* text=auto eol=lf
+
+# Binary files — never modify line endings
+*.png binary
+*.jpg binary
+*.gif binary
+*.npy binary
+*.pt  binary
+*.pth binary
+*.zip binary
+*.xlsx binary

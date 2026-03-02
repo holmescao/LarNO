@@ -1,0 +1,16 @@
+G1166_intensity_394_2
+G1135_intensity_156_5
+G1135_intensity_156_2
+G1162_intensity_151_1
+G1135_intensity_156_1
+G1166_intensity_394_1
+G1135_intensity_156_4
+G1162_intensity_131_2
+G1135_intensity_103_1
+G1135_intensity_103_5
+G1135_intensity_103_2
+G3555_intensity_284_2
+G1162_intensity_170_5
+G1162_intensity_131_1
+G1135_intensity_117_2
+G3535_intensity_215_5

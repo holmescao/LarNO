@@ -1,0 +1,118 @@
+default: &DEFAULT
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Config: ukea_finetune.yaml  (DEFAULT — Scenario A: fine-tune on UKEA)
+  #
+  # Use case: fine-tune the pre-trained Futian (region1_20m) model on the
+  #           UKEA small dataset.
+  #
+  # Before running: fill in finetune.pretrained_dir and finetune.state_dict_name
+  # with the actual checkpoint path (see README Section 5).
+  #
+  # Key constraints:
+  #   - n_modes_height / n_modes_width MUST match the pretrained architecture
+  #     (100 / 140) so saved weights can be loaded without shape errors.
+  #   - hidden_channels MUST match pretrained (32).
+  #   - n_layers MUST match pretrained (4).
+  #   - Only the input lifting layer is updated (finetune_lifting_only: True).
+  #   - Short schedule: warm_up_iter=1, n_epochs=100.
+  #   - eval.locations includes ukea_2m_5min for zero-shot super-resolution test.
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  #General
+  n_params_baseline: None
+  verbose: True
+  arch: 'tfno2d'
+
+  # Distributed computing
+  # Single-GPU (default): use_distributed: False, run with: python train.py
+  # Multi-GPU (DDP):      use_distributed: True,  run with: torchrun --nproc_per_node=N train.py
+  #   -> set batch_size = N (one sample per GPU)
+  distributed:
+    use_distributed: False
+    wireup_info: 'mpi'
+    wireup_store: 'tcp'
+    model_parallel_size: 2
+    seed: 666
+
+  # FNO model architecture
+  tfno2d:
+    data_channels: 13       # 6 rainfall + 6 cumulative-rainfall + 1 DEM
+    n_modes_height: 100     # MUST match region1 pretrained architecture
+    n_modes_width: 140      # MUST match region1 pretrained architecture
+    hidden_channels: 32     # MUST match region1 pretrained architecture
+    projection_channel_ratio: 2
+    n_layers: 4
+    domain_padding: None
+    domain_padding_mode: 'one-sided'
+    fft_norm: 'forward'
+    norm: 'group_norm'
+    skip: 'linear'
+    implementation: 'factorized'
+    separable: 0
+    preactivation: 0
+    use_channel_mlp: 1
+    channel_mlp_expansion: 0.5
+    channel_mlp_dropout: 0
+    factorization: None
+    rank: 1.0
+    fixed_rank_modes: None
+    dropout: 0.0
+    tensor_lasso_penalty: 0.0
+    joint_factorization: False
+    stabilizer: None
+    finetune_lifting_only: True   # only update the input lifting layer
+    wall_height: 50  # DEM value assigned to buildings/borders (metres)
+
+  # Pre-trained model (region1_20m) — fill in after downloading weights
+  finetune:
+    enabled: True
+    pretrained_dir: "../../exp/<expr_id>/weights/<checkpoint_name>"
+    state_dict_name: "<checkpoint_name>_state_dict.pt"
+
+  # Optimizer and scheduler
+  opt:
+    n_epochs: 100
+    learning_rate: 1e-2
+    training_loss: 'WMSE'   # 'l2' | 'h1' | 'WMSE' | 'h1WMSE'
+    weight_decay: 1e-4
+    amp_autocast: False
+    scheduler_T_max: 100
+    scheduler_patience: 5
+    scheduler: 'WarmUpCosineAnneal'
+    step_size: 60
+    gamma: 0.5
+    warm_up_iter: 1          # short warmup for fine-tuning
+    T_max: 100
+    lr_max: 1e-2
+    lr_min: 1e-4
+    window_size: 8           # number of time steps predicted per forward pass
+
+  # Dataset
+  data:
+    batch_size: 1
+    n_train: 1
+    train_resolution: 50*120
+    n_test: 1
+    test_resolutions: 50*120
+    test_batch_sizes: 1
+    encode_input: True
+    encode_output: False
+    num_workers_train: 0     # keep 0 on Windows; increase on Linux for speed
+    num_workers_test: 0
+    train_list: "ukea_train.txt"
+    test_list: "ukea_test.txt"
+    data_root: "../../benchmark/urbanflood/"
+    exp_root: "../../exp"
+    train_location: "ukea_8m_5min"
+
+  # Evaluation
+  eval:
+    flood_threshold: 0.03   # water depth (m) above which a cell is "flooded" (CSI)
+    locations: "ukea_8m_5min,ukea_2m_5min"   # add "ukea_2m_5min" for zero-shot super-resolution eval
+
+  # Patching (disabled)
+  patching:
+    levels: 0
+    padding: 0
+    stitching: False

@@ -1,0 +1,45 @@
+# ── Claude Code workspace (internal, not for repo) ───────────────────────────
+.claude/
+
+# ── Large data & outputs (download separately) ──────────────────────────────
+benchmark/
+exp/
+
+# Top-level zips left over from download
+*.zip
+
+# ── Python artifacts ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+*.whl
+
+# ── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Generated files (training / evaluation outputs) ──────────────────────────
+*.npy
+*.pt
+*.pth
+*.gif
+*.xlsx
+*.log
+train_log.txt
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo

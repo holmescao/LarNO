@@ -1,0 +1,113 @@
+default: &DEFAULT
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Config: ukea_scratch.yaml  (Scenario B: train UKEA from scratch)
+  #
+  # Use case: train LarNO from scratch on the UKEA small dataset.
+  #           No pre-trained weights required.
+  #
+  # Key settings:
+  #   - Lightweight architecture to reduce training time:
+  #       n_modes_height=12 (~H/4 for 50-row UKEA grid)
+  #       n_modes_width=30  (~W/4 for 120-col UKEA grid)
+  #       hidden_channels=16, n_layers=2
+  #   - Increase n_modes / hidden_channels / n_layers for better accuracy.
+  #   - finetune.enabled=False (random initialisation, all layers trained)
+  #   - Longer schedule: warm_up_iter=10, n_epochs=1000
+  #   - eval.locations includes ukea_2m_5min for zero-shot super-resolution test.
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  #General
+  n_params_baseline: None
+  verbose: True
+  arch: 'tfno2d'
+
+  # Distributed computing
+  distributed:
+    use_distributed: False
+    wireup_info: 'mpi'
+    wireup_store: 'tcp'
+    model_parallel_size: 2
+    seed: 666
+
+  # FNO model architecture
+  tfno2d:
+    data_channels: 13
+    n_modes_height: 12      # ~H/4 for 50-row UKEA grid
+    n_modes_width: 30       # ~W/4 for 120-col UKEA grid
+    hidden_channels: 16
+    projection_channel_ratio: 2
+    n_layers: 2
+    domain_padding: None
+    domain_padding_mode: 'one-sided'
+    fft_norm: 'forward'
+    norm: 'group_norm'
+    skip: 'linear'
+    implementation: 'factorized'
+    separable: 0
+    preactivation: 0
+    use_channel_mlp: 1
+    channel_mlp_expansion: 0.5
+    channel_mlp_dropout: 0
+    factorization: None
+    rank: 1.0
+    fixed_rank_modes: None
+    dropout: 0.0
+    tensor_lasso_penalty: 0.0
+    joint_factorization: False
+    stabilizer: None
+    finetune_lifting_only: False  # train all layers from scratch
+    wall_height: 50
+
+  # No pre-trained weights (training from scratch)
+  finetune:
+    enabled: False
+    pretrained_dir: ""
+    state_dict_name: ""
+
+  # Optimizer and scheduler
+  opt:
+    n_epochs: 1000
+    learning_rate: 1e-2
+    training_loss: 'WMSE'
+    weight_decay: 1e-4
+    amp_autocast: False
+    scheduler_T_max: 1000
+    scheduler_patience: 5
+    scheduler: 'WarmUpCosineAnneal'
+    step_size: 60
+    gamma: 0.5
+    warm_up_iter: 10         # longer warmup for scratch training
+    T_max: 1000
+    lr_max: 1e-2
+    lr_min: 1e-4
+    window_size: 8
+
+  # Dataset
+  data:
+    batch_size: 1
+    n_train: 1
+    train_resolution: 50*120
+    n_test: 1
+    test_resolutions: 50*120
+    test_batch_sizes: 1
+    encode_input: True
+    encode_output: False
+    num_workers_train: 0
+    num_workers_test: 0
+    train_list: "ukea_train.txt"
+    test_list: "ukea_test.txt"
+    data_root: "../../benchmark/urbanflood/"
+    exp_root: "../../exp"
+    train_location: "ukea_8m_5min"
+
+  # Evaluation
+  eval:
+    flood_threshold: 0.03
+    locations: "ukea_8m_5min,ukea_2m_5min"  # comma-separated list of locations to evaluate
+
+  # Patching (disabled)
+  patching:
+    levels: 0
+    padding: 0
+    stitching: False

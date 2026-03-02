@@ -1,0 +1,117 @@
+default: &DEFAULT
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Config: region1_scratch.yaml  (Scenario C: train Futian/custom from scratch)
+  #
+  # Use case: train LarNO from scratch on the Futian (region1_20m) dataset
+  #           or your own large-scale dataset.
+  #
+  # Key settings:
+  #   - Lightweight architecture to reduce training time:
+  #       n_modes_height=40 (~H/10 for 400-row region1 grid)
+  #       n_modes_width=56  (~W/10 for 560-col region1 grid)
+  #       hidden_channels=16, n_layers=2
+  #   - To reproduce paper accuracy: n_modes_height=100, n_modes_width=140,
+  #       hidden_channels=32, n_layers=4
+  #   - finetune.enabled=False (random initialisation, all layers trained)
+  #   - Longer schedule: warm_up_iter=10, n_epochs=1000, window_size=4
+  #   - train_list defaults to region1_smalltrain.txt (16 events, fast start);
+  #       switch to region1_fulltrain.txt (64 events) for full training
+  #   - For a custom dataset: update train_location, train_list, test_list,
+  #       and eval.locations to match your data
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  #General
+  n_params_baseline: None
+  verbose: True
+  arch: 'tfno2d'
+
+  # Distributed computing
+  distributed:
+    use_distributed: False
+    wireup_info: 'mpi'
+    wireup_store: 'tcp'
+    model_parallel_size: 2
+    seed: 666
+
+  # FNO model architecture
+  tfno2d:
+    data_channels: 13
+    n_modes_height: 40     # ~H/4 for 400-row region1 grid; increase for finer detail
+    n_modes_width: 56      # ~W/4 for 560-col region1 grid
+    hidden_channels: 16
+    projection_channel_ratio: 2
+    n_layers: 2
+    domain_padding: None
+    domain_padding_mode: 'one-sided'
+    fft_norm: 'forward'
+    norm: 'group_norm'
+    skip: 'linear'
+    implementation: 'factorized'
+    separable: 0
+    preactivation: 0
+    use_channel_mlp: 1
+    channel_mlp_expansion: 0.5
+    channel_mlp_dropout: 0
+    factorization: None
+    rank: 1.0
+    fixed_rank_modes: None
+    dropout: 0.0
+    tensor_lasso_penalty: 0.0
+    joint_factorization: False
+    stabilizer: None
+    finetune_lifting_only: False  # train all layers from scratch
+    wall_height: 50
+
+  # No pre-trained weights (training from scratch)
+  finetune:
+    enabled: False
+    pretrained_dir: ""
+    state_dict_name: ""
+
+  # Optimizer and scheduler
+  opt:
+    n_epochs: 1000
+    learning_rate: 1e-2
+    training_loss: 'WMSE'
+    weight_decay: 1e-4
+    amp_autocast: False
+    scheduler_T_max: 1000
+    scheduler_patience: 5
+    scheduler: 'WarmUpCosineAnneal'
+    step_size: 60
+    gamma: 0.5
+    warm_up_iter: 10
+    T_max: 1000
+    lr_max: 1e-2
+    lr_min: 1e-4
+    window_size: 4
+
+  # Dataset
+  data:
+    batch_size: 1
+    n_train: 1
+    train_resolution: 400*560
+    n_test: 1
+    test_resolutions: 400*560
+    test_batch_sizes: 1
+    encode_input: True
+    encode_output: False
+    num_workers_train: 0
+    num_workers_test: 0
+    train_list: "region1_smalltrain.txt"   # or region1_fulltrain.txt
+    test_list: "region1_test.txt"
+    data_root: "../../benchmark/urbanflood/"
+    exp_root: "../../exp"
+    train_location: "region1_20m"     # or your own location folder name
+
+  # Evaluation
+  eval:
+    flood_threshold: 0.03
+    locations: "region1_20m"          # or your own location folder name
+
+  # Patching (disabled)
+  patching:
+    levels: 0
+    padding: 0
+    stitching: False

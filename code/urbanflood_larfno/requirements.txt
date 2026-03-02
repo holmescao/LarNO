@@ -1,0 +1,13 @@
+ruamel.yaml
+configmypy
+matplotlib
+opt-einsum
+h5py
+zarr
+numpy
+pandas
+tqdm
+scipy
+opencv-python
+openpyxl
+torchmetrics
