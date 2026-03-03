@@ -58,7 +58,6 @@ default: &DEFAULT
     tensor_lasso_penalty: 0.0
     joint_factorization: False
     stabilizer: None
-    finetune_lifting_only: True
     wall_height: 50  # DEM value assigned to buildings/borders - must exceed real terrain max (metres)
 
   # Pre-trained model (region1_20m)

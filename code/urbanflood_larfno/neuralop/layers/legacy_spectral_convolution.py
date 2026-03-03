@@ -452,7 +452,7 @@ class SpectralConv(BaseSpectralConv):
             x = x.half()
 
         x = torch.fft.rfftn(x, norm=self.fft_norm, dim=fft_dims)
-        # TODO: 只保留实数
+        # TODO: keep real part only
         x = x.real
 
         if self.fno_block_precision == "mixed":

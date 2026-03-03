@@ -375,25 +375,24 @@ class FNO(BaseModel, name='FNO'):
                     filter_size=1,
                     num_features=self.hidden_channels)
         
-        # 缓存最近一次该样本/序列的隐藏状态（每层一个）
+        # Cache the most recent hidden state for each sample/sequence (one per layer)
         self._state_cache = {}   # dict: cache_key -> List[Tensor] (len = n_layers)
-        self._last_t = {}        # dict: cache_key -> int (上次缓存对应的 t)
+        self._last_t = {}        # dict: cache_key -> int (timestep of last cached state)
 
         # ==========================================
-        # === 新增：针对微调任务的参数冻结逻辑 ===
+        # === Parameter freezing logic for fine-tuning ===
         # ==========================================
         self.finetune_lifting_only = finetune_lifting_only
-        print(f"self.finetune_lifting_only:{self.finetune_lifting_only}")
         if self.finetune_lifting_only:
-            # 1. 强制冻结网络中的所有参数 (包含 positional_embedding, fno_blocks, convgru, projection)
+            # 1. Freeze all parameters in the network (positional_embedding, fno_blocks, convgru, projection)
             for param in self.parameters():
                 param.requires_grad = False
             
-            # 2. 仅将 lifting 层的参数解冻
+            # 2. Unfreeze only the lifting layer parameters
             for param in self.lifting.parameters():
                 param.requires_grad = True
             
-            print("🚀 [Transfer Learning Mode] 仅解冻 'lifting' 层参数，其它所有核心算子 (FNO, ConvGRU) 已冻结。")
+            print("[Transfer Learning Mode] Only 'lifting' layer parameters are unfrozen; all other operators (FNO, ConvGRU) are frozen.")
             
     def forward(self, ind, x, device, output_shape=None, init_shape=None, cache_key=None, use_cached_state=True, eval=False):
         (B,H,W,K) = init_shape
@@ -404,28 +403,28 @@ class FNO(BaseModel, name='FNO'):
         elif isinstance(output_shape, tuple):
             output_shape = [None]*(self.n_layers - 1) + [output_shape]
 
-        # 1) 初始化隐状态
+        # 1) Initialize hidden state
         shape = (B,C,H,W)
         prev_hid_state_list = initialize_states(self.n_layers, shape, device)
 
         # print(f"ind:{ind}")
 
-        # 2) 优先：若有缓存且正好对齐 (last_t == ind-1)，直接复用
+        # 2) Prefer cached state: if cache exists and aligns exactly (last_t == ind-1), reuse it
         used_cache = False
         if use_cached_state and cache_key is not None and ind > 0:
             last_t = self._last_t.get(cache_key, None)
             if last_t is not None and last_t == ind - 1 and cache_key in self._state_cache:
-                # 深拷 + detach，避免跨窗口的计算图牵连
+                # Deep copy + detach to avoid cross-window computation graph entanglement
                 prev_hid_state_list = [s.detach().clone() for s in self._state_cache[cache_key]]
                 used_cache = True
                 # print("use cache")
 
-        # 3) 若没有可用缓存，退回原来的预热流程
+        # 3) No usable cache: fall back to the original prewarming procedure
         if (not used_cache) and ind > 0:
             print(f"prewarming")
             prev_hid_state_list = self.prewarming(ind, x, prev_hid_state_list, output_shape, device)
 
-        # 4) 正常滚动 T 步
+        # 4) Normal rolling forward for T steps
         outputs = []
         for t in range(ind, ind + K):
             st = time.time()
@@ -440,7 +439,7 @@ class FNO(BaseModel, name='FNO'):
         outputs = torch.cat(outputs, dim=-1)  # (B, Cout, H, W, T)
 
 
-        # 5) 把“本窗口最后时刻”的每层隐状态缓存起来，供下个窗口 (t+1) 直接用
+        # 5) Cache the hidden state of the last timestep in this window for the next window (t+1)
         if cache_key is not None:
             self._state_cache[cache_key] = [s.detach() for s in prev_hid_state_list]
             self._last_t[cache_key] = ind + K - 1
@@ -793,19 +792,19 @@ def get_past_rainfall(rainfall, t, nums, H, W):
     start_idx = max(0, t - nums + 1)
     end_idx = min(t + 1, S)
 
-    # 初始化结果 (B, C, H, W, nums)
+    # Initialize result buffer (B, C, H, W, nums)
     extracted_rainfall = torch.zeros(
         (B, nums, H, W, 1), device=rainfall.device
     )
 
     actual_num_steps = end_idx - start_idx
 
-    # 取出 BC11actual_num_steps
+    # Extract slice of shape (B, actual_num_steps)
     extracted_data = rainfall[:, 0,0,0, start_idx:end_idx]  # (B, C)
-    # 扩展到 BCHWT
+    # Expand to (B, C, H, W, actual_num_steps)
     extracted_data = extracted_data.unsqueeze(2).unsqueeze(3).unsqueeze(4).expand(-1, -1, H, W, -1)
 
-    # BCHWT
+    # Fill the last actual_num_steps positions (BCHWT layout)
     extracted_rainfall[:,nums - actual_num_steps:,...] = extracted_data
 
     return extracted_rainfall
@@ -916,19 +915,19 @@ def get_past_rainfall(rainfall, t, nums, H, W):
     start_idx = max(0, t - nums + 1)
     end_idx = min(t + 1, S)
 
-    # 初始化结果 (B, C, H, W, nums)
+    # Initialize result buffer (B, C, H, W, nums)
     extracted_rainfall = torch.zeros(
         (B, nums, H, W, 1), device=rainfall.device
     )
 
     actual_num_steps = end_idx - start_idx
 
-    # 取出 BC11actual_num_steps
+    # Extract slice of shape (B, actual_num_steps)
     extracted_data = rainfall[:, 0,0,0, start_idx:end_idx]  # (B, C)
-    # 扩展到 BCHWT
+    # Expand to (B, C, H, W, actual_num_steps)
     extracted_data = extracted_data.unsqueeze(2).unsqueeze(3).unsqueeze(4).expand(-1, -1, H, W, -1)
 
-    # BCHWT
+    # Fill the last actual_num_steps positions (BCHWT layout)
     extracted_rainfall[:,nums - actual_num_steps:,...] = extracted_data
 
     return extracted_rainfall
@@ -967,14 +966,14 @@ def r_MinMaxScaler(data, max, min):
 
 def get_past_rainfall_hw(rainfall, t, nums):
     """
-    提取过去 nums 个时刻的降雨数据 (HW 上有空间信息，不需填充)。
+    Extracts the past `nums` timesteps of rainfall data (with spatial HW information, no padding needed).
 
-    参数:
+    Parameters:
     - rainfall: Tensor with shape (B, C, H, W, S)
-    - t: 当前时刻索引
-    - nums: 要提取的时间步数量
+    - t: Current time index.
+    - nums: Number of timesteps to retrieve.
 
-    返回:
+    Returns:
     - Tensor with shape (B, C, H, W, nums)
     """
     B, C, H, W, S = rainfall.shape
@@ -983,15 +982,15 @@ def get_past_rainfall_hw(rainfall, t, nums):
 
     actual_num_steps = end_idx - start_idx
 
-    # 初始化 (B, nums, H, W, C)
+    # Initialize output buffer (B, nums, H, W, C)
     extracted_rainfall = torch.zeros((B, nums, H, W, 1), device=rainfall.device)
 
-    # 提取真实存在的时间片段 (B, C, H, W, actual_num_steps)
+    # Extract the existing time segment (B, C, H, W, actual_num_steps)
     extracted_data = rainfall[:, :, :, :, start_idx:end_idx]
     # extracted_data -> BTHWC
     extracted_data = extracted_data.permute(0, 4, 2, 3, 1)
 
-    # 填充到输出的最后 actual_num_steps 个时间位置
+    # Fill the last actual_num_steps time positions in the output
     extracted_rainfall[:, nums-actual_num_steps:,... ] = extracted_data
     
 
@@ -1001,27 +1000,27 @@ def get_past_rainfall_hw(rainfall, t, nums):
 def plot_rainfall_hw_at_t0(rainfall, b=0, c=0, title=None, cmap="viridis",
                            save_path=None, show=True):
     """
-    绘制 BCHWT 形状的 rainfall 在 t=0 时刻的 H-W 热力图。
+    Plot an H-W heatmap of rainfall at t=0 from a BCHWT-shaped tensor/array.
 
     Parameters
     ----------
     rainfall : torch.Tensor or np.ndarray
-        形状 (B, C, H, W, T) 的降雨张量/数组。
+        Rainfall tensor/array with shape (B, C, H, W, T).
     b, c : int
-        选择的 batch 与 channel 索引。
+        Batch and channel indices to select.
     title : str or None
-        图标题；None 则自动生成。
+        Plot title; auto-generated if None.
     cmap : str
-        matplotlib colormap 名称。
+        Matplotlib colormap name.
     save_path : str or None
-        若给出，将图保存到该路径。
+        If provided, save the figure to this path.
     show : bool
-        是否 plt.show()；在无图形界面环境可设为 False。
+        Whether to call plt.show(); set to False in headless environments.
 
     Returns
     -------
     hw : np.ndarray
-        取出的 (H, W) 数据（已转成 numpy）。
+        The extracted (H, W) data as a numpy array.
     """
     import numpy as np
     import matplotlib.pyplot as plt

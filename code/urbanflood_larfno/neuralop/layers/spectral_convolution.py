@@ -418,7 +418,7 @@ class SpectralConv(BaseSpectralConv):
             x = torch.fft.fftn(x, norm=self.fft_norm, dim=fft_dims)
         else: 
             x = torch.fft.rfftn(x, norm=self.fft_norm, dim=fft_dims)
-            # TODO: 只保留实数
+            # TODO: keep real part only
             x = x.real
         if self.order > 1:
             x = torch.fft.fftshift(x, dim=fft_dims[:-1])

@@ -202,7 +202,7 @@ class Trainer:
                 for metric in eval_losses.keys():
                     metrics.append(f"{name}_{metric}")
 
-            # 添加 R2Metric 到监控指标中
+            # Add R2Metric to monitored metrics
             for name in test_loader.keys():
                 metrics.append(f"{name}_r2")
             assert self.save_best in metrics, \
@@ -287,25 +287,25 @@ class Trainer:
 
         for idx, (inputs, labels, event_name) in pbar:
             with torch.no_grad():
-                # 放到GPU
+                # Move to GPU
                 inputs = _to_device(inputs, self.device)
                 labels = labels.to(self.device)
 
-                # label归一化
+                # Normalize labels
                 labels = MinMaxScaler(labels, self.y_range["h"][1], self.y_range["h"][0])
 
 
                 if self.verbose:
                     print(f"Processing batch {idx}")
 
-                # 获取时间维度大小
+                # Get time dimension size
                 T = labels.shape[-1]
-                window_size = self.window_size # 窗口长度
-                num_windows = T // window_size # 窗口数量
+                window_size = self.window_size # window length
+                num_windows = T // window_size # number of windows
 
                 window_sample = {
-                    'x': inputs, # 未处理且未归一化
-                    'y': labels, # 归一化的完整序列 BCTHW
+                    'x': inputs, # raw, unnormalized inputs
+                    'y': labels, # normalized full sequence BCTHW
                 }
 
             for w in range(num_windows):
@@ -427,25 +427,25 @@ class Trainer:
 
     def evaluate_for_test(self, epoch, test_loader):
         """
-        返回：
-        all_metrics: 按事件名的指标
+        Returns:
+        all_metrics: per-event metrics
             {
             "<eventA>": {"R2": float, "MSE": float, "RMSE": float, "MAE": float,
                         "PeakR2": float, "CSI": float},
             "<eventB>": {...},
             ...
             }
-        summary: 所有事件上的均值/标准差
+        summary: mean/std across all events
             {
             "mean": {"R2": float, "MSE": float, "RMSE": float, "MAE": float,
                     "PeakR2": float, "CSI": float},
-            "std":  {同上}
+            "std":  {same keys}
             }
         """
         device = self.device
         all_metrics = {}
 
-        # 用于全局统计 mean/std
+        # Aggregation lists for global mean/std
         agg = {
             "R2":     [],
             "MSE":    [],
@@ -457,7 +457,7 @@ class Trainer:
         flood_thr = self.flood_threshold
 
         def _event_to_str(ev):
-            # 统一把 event_name 转成稳定的 str（兼容 str/list/tuple/tensor/ndarray/bytes）
+            # Normalize event_name to a stable str (handles str/list/tuple/tensor/ndarray/bytes)
             if isinstance(ev, (bytes, bytearray)):
                 try:
                     return ev.decode("utf-8")
@@ -483,7 +483,7 @@ class Trainer:
                 if self.verbose:
                     print(f"Processing test sample {idx}, event_name: {ev}")
 
-                # —— 放到 GPU / 归一化 —— #
+                # —— Move to GPU / normalize —— #
                 inputs = _to_device(inputs, device)
                 # labels = labels.to(device, dtype=torch.float32)
                 labels = MinMaxScaler(labels, self.y_range["h"][1], self.y_range["h"][0])
@@ -491,25 +491,25 @@ class Trainer:
                 sample = {'x': inputs,'y':labels}   # y: [B, C, H, W, T]
                 T = labels.shape[-1]
 
-                # —— 模型预测完整序列 —— #
+                # —— Run model inference over full sequence —— #
                 full_pred = self.predict_full_sample(idx, sample, T)  # [B,C,H,W,T]
 
-                # 只评估水深 h 通道：形状 [B, H, W, T]
+                # Evaluate only the water depth h channel: shape [B, H, W, T]
                 y_true_h = labels[:, 0, :, :, :]  # [B, H, W, T]
                 y_pred_h = full_pred[:, 0, :, :, :]
 
-                # 逆归一化
+                # Inverse normalization
                 unit = 1000
                 h_min = self.y_range["h"][0] / unit
                 h_max = self.y_range["h"][1] / unit
                 y_true_h = r_MinMaxScaler(y_true_h, h_max, h_min)
                 y_pred_h = r_MinMaxScaler(y_pred_h, h_max, h_min)
 
-                # 展平成 1D 向量（全时空）
+                # Flatten to 1D vector (all space and time)
                 y_true_flat = y_true_h.flatten()
                 y_pred_flat = y_pred_h.flatten()
 
-                # —— 基础指标（单个事件样本）—— #
+                # —— Basic metrics (per event sample) —— #
                 eps = 1e-12
                 diff = y_pred_flat - y_true_flat
 
@@ -522,10 +522,11 @@ class Trainer:
                 ss_tot = torch.sum((y_true_flat - mean_y) ** 2)
                 r2_val = 1.0 - ss_res / (ss_tot + eps)
 
-                # —— PeakR2：在 y_true_h 的“全域平均水深”达到峰值的时刻 t*，按该帧 (H,W) 计算 R² —— #
+                # —— PeakR2: at the timestep t* where spatially-averaged true depth is maximum,
+                # compute R² over that frame (H, W) —— #
                 # y_true_h, y_pred_h: [B, H, W, T]
-                # 先对 (B,H,W) 求平均，得到每个 t 的全域平均水深
-                # （更鲁棒于用单像元最大值；如需改成“全域总量最大”，把 mean 改成 sum 即可）
+                # Average over (B,H,W) to get global mean depth at each t
+                # (more robust than single-pixel max; change mean->sum for total-volume peak)
                 spatial_mean_per_t = y_true_h.mean(dim=(0, 1, 2))  # [T]
                 t_star = int(torch.argmax(spatial_mean_per_t).item())
 
@@ -538,8 +539,8 @@ class Trainer:
                 ss_tot_peak = torch.sum((y_true_peak - mean_peak) ** 2)
                 peak_r2_val = 1.0 - ss_res_peak / (ss_tot_peak + eps)
 
-                # —— CSI：最大淹没范围（任一时刻 > 阈值即认为该像元被淹没） —— #
-                # 先做时序最大：在 T 上取 max，得到每像元最大水深
+                # —— CSI: maximum inundation extent (a pixel is considered flooded if depth > threshold at any timestep) —— #
+                # Take the temporal maximum depth per pixel
                 y_true_max = torch.amax(y_true_h, dim=-1)  # [B, H, W]
                 y_pred_max = torch.amax(y_pred_h, dim=-1)  # [B, H, W]
 
@@ -551,7 +552,7 @@ class Trainer:
                 fn = torch.sum((true_flood & ~pred_flood).to(torch.float32))
                 csi_val = tp / (tp + fp + fn + eps)
 
-                # 转 float
+                # Convert to float
                 r2_f     = float(r2_val.item())
                 mse_f    = float(mse_val.item())
                 rmse_f   = float(rmse_val.item())
@@ -559,7 +560,7 @@ class Trainer:
                 peakr2_f = float(peak_r2_val.item())
                 csi_f    = float(csi_val.item())
 
-                # 写入 per-event
+                # Write per-event metrics
                 all_metrics[ev] = {
                     "R2":     r2_f,
                     "MSE":    mse_f,
@@ -570,7 +571,7 @@ class Trainer:
                 }
                 print(all_metrics)
 
-                # 累计到全局
+                # Accumulate for global aggregation
                 agg["R2"].append(r2_f)
                 agg["MSE"].append(mse_f)
                 agg["RMSE"].append(rmse_f)
@@ -580,22 +581,22 @@ class Trainer:
 
                 
                 
-                # 可视化与结果落盘
+                # Visualization and peak map (batch_index: if B>1, loop or pass a specific index)
                 self.visualize_and_save_full(ev, y_true_h.numpy(), y_pred_h.numpy(), epoch, epoch_visualization_dir, idx)
                 self.save_comparison_gif(ev, y_true_h.numpy(), y_pred_h.numpy(), epoch, epoch_visualization_dir)
 
-                # 峰值分布图
+                # Peak distribution map
                 peak_path = os.path.join(epoch_visualization_dir, f"{ev}_peak_maps_epoch{epoch}_idx{idx}.png")
                 visualize_peak_maps(
-                    y_true_h=y_true_h, 
+                    y_true_h=y_true_h,
                     y_pred_h=y_pred_h,
                     save_path=peak_path,
                     title=f"{ev} Peak Maps (epoch {epoch}, idx {idx})",
-                    batch_index=0,        # 如果 B>1，可改成循环或传入具体下标
-                    peak_reduce="mean"    # 或 "sum"
+                    batch_index=0,        # if B>1, loop or pass specific index
+                    peak_reduce="mean"    # or "sum"
                 )
 
-                # 最大淹没范围误差分类图
+                # Maximum inundation extent error classification map
                 csi_path = os.path.join(epoch_visualization_dir, f"{ev}_maxCSI_errmap_epoch{epoch}_idx{idx}.png")
                 visualize_max_inundation_error_map(
                     y_true_h=y_true_h,
@@ -608,7 +609,7 @@ class Trainer:
 
                 self.save_predictions_full(ev, y_pred_h.numpy(), epoch, epoch_pred_dir, idx)
 
-        # —— 计算 mean/std —— #
+        # —— Compute mean/std —— #
         summary = {
             "mean": {k: float(np.mean(v)) if len(v) > 0 else float("nan") for k, v in agg.items()},
             "std":  {k: float(np.std(v))  if len(v) > 0 else float("nan") for k, v in agg.items()},
@@ -625,7 +626,7 @@ class Trainer:
 
     def predict_full_sample(self, idx, sample: dict, T):
         """
-        对单个样本进行窗口化预测，并重建完整的预测结果。
+        Run windowed prediction on a single sample and reconstruct the full prediction sequence.
         """
         self.model.eval()
         self.model.to(self.device)
@@ -636,7 +637,7 @@ class Trainer:
         init_shape = (B,H,W,K)
 
         ind = 0
-        # 生成预测
+        # Generate predictions
         if self.mixed_precision:
             with torch.autocast(device_type=self.autocast_device_type):
                 # y_pred = self.model(**window_sample)
@@ -658,13 +659,13 @@ class Trainer:
     
     def visualize_and_save_full(self, event_name, labels, full_pred: torch.Tensor, epoch: int, epoch_dir: str, sample_idx: int):
         """
-        生成并保存标签和完整预测结果的水深H的可视化图像。
+        Generate and save visualization images of ground-truth and predicted water depth H.
         """
 
-        # 提取标签 y 和预测 y_pred
+        # Extract predicted y and ground-truth y
         y_pred = full_pred  # [B, C, H, W, T]
 
-        # 选择水深 h（假设为第一个通道）
+        # Select water depth h (assumed to be the first channel)
         y_h = labels
         y_pred_h = y_pred
 
@@ -674,25 +675,25 @@ class Trainer:
         # y_h = r_MinMaxScaler(y_h.cpu().numpy(), h_max, h_min)
         # y_pred_h = r_MinMaxScaler(y_pred_h.cpu().numpy(), h_max, h_min)
 
-        # 定义需要可视化的时间点（分钟）
-        # 根据y_h的时长，显示6个时刻
-        T = y_h.shape[-1]  # 时间维度大小
+        # Select time points to visualize based on total duration T (6 evenly spaced frames)
+        # Show 6 timesteps distributed across y_h's time range
+        T = y_h.shape[-1]  # time dimension size
         time_points = [int(T * i / 6) for i in range(6)]
 
-        # 将分钟转换为索引（假设每分钟一个时间步，索引从0开始）
+        # Convert minutes to indices (assume one timestep per minute, 0-indexed)
         # time_indices = [tp - 1 for tp in time_points]
-        time_indices = time_points  # 直接使用索引
+        time_indices = time_points  # use indices directly
 
-        # 计算标签和预测的最大最小值，用于统一 colorbar 范围
+        # Compute min/max of labels and predictions to unify colorbar range
         # vmin = min(y_h.min(), y_pred_h.min()).item()
         # vmax = max(y_h.max(), y_pred_h.max()).item()
-        vmin, vmax = 0, 2  # 颜色范围
+        vmin, vmax = 0, 2  # colorbar range
 
-        # 创建一个两行七列的图形
+        # Create a figure with 2 rows and len(time_indices) columns
         fig, axes = plt.subplots(2, len(time_indices),
                                  figsize=(3 * len(time_indices), 6))
         cmap = plt.cm.get_cmap('coolwarm').copy()
-        cmap.set_bad(color='white')  # 掩码或 NaN 会显示成白色
+        cmap.set_bad(color='white')  # masked or NaN values will display as white
         
         for i, (tp, idx) in enumerate(zip(time_points, time_indices)):
             if idx >= y_h.shape[-1]:
@@ -700,23 +701,23 @@ class Trainer:
                     f"Time index {idx} is out of bounds for time dimension {y_h.shape[-1]}. Skipping.")
                 continue
 
-            # 获取标签和预测图像
+            # Retrieve ground-truth and predicted images
             label_img = y_h[0, :, :, idx]       # [H=400, W=400]
             pred_img = y_pred_h[0, :, :, idx]   # [H=400, W=400]
-            
-            # 方法一：掩码小于阈值的区域（推荐）
+
+            # Option 1: mask regions below threshold (recommended)
             # label_img = np.ma.masked_less(label_img, 0.01)
             # pred_img  = np.ma.masked_less(pred_img, 0.01)
 
 
-            # 绘制标签
+            # Plot ground-truth
             ax = axes[0, i]
             im = ax.imshow(label_img, cmap=cmap, vmin=vmin, vmax=vmax)
             ax.axis('off')
             ax.set_title(f'Label {tp} min')
             fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-            # 绘制预测结果
+            # Plot prediction
             ax = axes[1, i]
             im = ax.imshow(pred_img, cmap=cmap, vmin=vmin, vmax=vmax)
             ax.axis('off')
@@ -724,11 +725,11 @@ class Trainer:
             fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
         plt.tight_layout()
-        # 保存图像
+        # Save figure
         save_path = os.path.join(
             epoch_dir, f'visualization_epoch_{epoch}_sample_{event_name}.png')
         plt.savefig(save_path, dpi=50)
-        plt.close(fig)  # 关闭图形以释放内存
+        plt.close(fig)  # Close figure to free memory
 
         if self.verbose:
             print(f"Saved visualization to {save_path}")
@@ -782,22 +783,22 @@ class Trainer:
 
     def save_predictions_full(self, event_name, full_pred: torch.Tensor, epoch: int, epoch_pred_dir: str, sample_idx: int):
         """
-        将重建后的完整预测的 h、u、v 保存为一个 .npy 文件。
+        Save the full reconstructed prediction (h channel) as a single .npy file.
         """
         self.model.eval()
         self.model.to(self.device)
 
-        # 转换为 NumPy 数组
+        # Convert to NumPy array
         if  isinstance(full_pred, torch.Tensor):
             y_pred_np = full_pred[0].cpu().numpy()  # [C=1, H=400, W=400, T=360]
         else:
-            y_pred_np = full_pred[0]  # 假设已经是 numpy 数组了
+            y_pred_np = full_pred[0]  # assumed to already be a numpy array
 
-        # 创建保存路径
+        # Build save path
         pred_filename = f'predictions_epoch_{epoch}_sample_{event_name}.npy'
         pred_path = os.path.join(epoch_pred_dir, pred_filename)
 
-        # 保存为 .npy 文件
+        # Save as .npy file
         np.save(pred_path, y_pred_np)
 
 
@@ -919,11 +920,11 @@ class Trainer:
             else:
                 save_name = "model"
 
-            # 根据epoch编号创建一个唯一的文件名
+            # Build a unique filename based on epoch number and error
             save_filename = f"{save_name}_epoch_{self.epoch}_error@{train_err:.9f}"
             save_path = os.path.join(save_dir, save_filename)
 
-            # 确保保存路径存在
+            # Ensure save directory exists
             os.makedirs(save_dir, exist_ok=True)
 
             save_training_state(save_dir=save_path,
@@ -940,13 +941,13 @@ class Trainer:
 
     def save_metrics(self, epoch_metrics: dict, epoch: int, test_metrics_dir):
         """
-        保存指标到一个 CSV 文件中。
+        Save metrics to a CSV file.
 
-        参数:
+        Parameters:
         - eval_metrics: dict
-            评估指标，包括 R2 和 MSE。
+            Evaluation metrics, including R2 and MSE.
         - epoch: int
-            当前的 epoch 数，用于命名保存的文本文件。
+            Current epoch number, used to name the saved file.
         """
         csv_filename = 'metrics.csv'
         csv_path = os.path.join(test_metrics_dir, csv_filename)
@@ -956,7 +957,7 @@ class Trainer:
         with open(csv_path, 'a', newline='') as f:
             writer = csv.writer(f)
             if not file_exists:
-                # 写入表头
+                # Write header
                 header = ['Epoch'] + list(epoch_metrics.keys())
                 writer.writerow(header)
 
@@ -969,31 +970,31 @@ class Trainer:
 
     def save_test_metrics(self, epoch_metrics: dict, epoch: int, out_dir: str):
         """
-        将指标保存到 out_dir/metrics.csv
-        支持两种输入：
-        A) 分事件的层级结构：
+        Save metrics to out_dir/metrics.csv.
+        Supports two input formats:
+        A) Per-event hierarchical structure:
             {
             "eventA": {"R2": 0.9, "MSE": 0.01, ...},
             "eventB": {...}
             }
-            → 逐行写入 (Epoch, Event, Metric, Value)
+            -> write rows as (Epoch, Event, Metric, Value)
 
-        B) 扁平结构（兼容你原来的训练日志）：
+        B) Flat structure (compatible with original training log format):
             {"train_err":..., "avg_loss":..., ...}
-            → 写 (Epoch, Event='__overall__', Metric, Value)
+            -> write (Epoch, Event='__overall__', Metric, Value)
         """
         os.makedirs(out_dir, exist_ok=True)
         csv_path = os.path.join(out_dir, "metrics.csv")
         file_exists = os.path.isfile(csv_path)
 
         def _write_rows(writer, epoch_metrics, epoch):
-            # 分事件结构
+            # Per-event structure
             if all(isinstance(v, dict) for v in epoch_metrics.values()):
                 for ev, md in epoch_metrics.items():
                     for metric, val in md.items():
                         writer.writerow([epoch, ev, metric, f"{float(val):.6f}"])
             else:
-                # 兼容：无事件场景
+                # Fallback: no event structure
                 ev = "__overall__"
                 for metric, val in epoch_metrics.items():
                     writer.writerow([epoch, ev, metric, f"{float(val):.6f}"])
@@ -1017,22 +1018,22 @@ def visualize_max_inundation_error_map(
     batch_index: int = 0,
 ):
     """
-    绘制最大淹没范围的误差分类图：
-    - 蓝色：TP（正确预测淹没，True>thr & Pred>thr）
-    - 红色：FN（漏检，True>thr & Pred<=thr）
-    - 黄色：FP（误报，Pred>thr & True<=thr）
-    - 灰色：TN（都不淹没）
+    Plot the maximum inundation extent error classification map:
+    - Blue:  TP (correctly predicted flooded, True>thr & Pred>thr)
+    - Red:   FN (missed detection, True>thr & Pred<=thr)
+    - Yellow: FP (false alarm, Pred>thr & True<=thr)
+    - Gray:  TN (neither flooded)
     """
     assert y_true_h.ndim == 4 and y_pred_h.ndim == 4, "Expect [B,H,W,T]"
 
-    # 取时序最大（按像元）
+    # Take temporal maximum per pixel
     y_true_max = torch.amax(y_true_h[batch_index], dim=-1).numpy()  # [H,W]
     y_pred_max = torch.amax(y_pred_h[batch_index], dim=-1).numpy()
 
     true_flood = (y_true_max > flood_thr)
     pred_flood = (y_pred_max > flood_thr)
 
-    # 编码：0=TN, 1=TP, 2=FN, 3=FP
+    # Encode: 0=TN, 1=TP, 2=FN, 3=FP
     code = np.zeros_like(true_flood, dtype=np.uint8)
     tp = (true_flood & pred_flood)
     fn = (true_flood & ~pred_flood)
@@ -1041,7 +1042,7 @@ def visualize_max_inundation_error_map(
     code[fn] = 2
     code[fp] = 3
 
-    # 颜色表（TN灰、TP蓝、FN红、FP黄）
+    # Color map (TN gray, TP blue, FN red, FP yellow)
     cmap = ListedColormap(["#D3D3D3", "#1f77b4", "#d62728", "#ffdf00"])
     bounds = [-0.5, 0.5, 1.5, 2.5, 3.5]
     norm = BoundaryNorm(bounds, cmap.N)
@@ -1053,12 +1054,12 @@ def visualize_max_inundation_error_map(
     if title:
         ax.set_title(title)
 
-    # 自定义图例
+    # Custom legend
     legend_elems = [
-        Patch(facecolor="#1f77b4", edgecolor='k', label="TP 正确预测"),
-        Patch(facecolor="#d62728", edgecolor='k', label="FN 漏检"),
-        Patch(facecolor="#ffdf00", edgecolor='k', label="FP 误报"),
-        Patch(facecolor="#D3D3D3", edgecolor='k', label="TN 真负"),
+        Patch(facecolor="#1f77b4", edgecolor='k', label="TP (correctly predicted flooded)"),
+        Patch(facecolor="#d62728", edgecolor='k', label="FN (missed detection)"),
+        Patch(facecolor="#ffdf00", edgecolor='k', label="FP (false alarm)"),
+        Patch(facecolor="#D3D3D3", edgecolor='k', label="TN (true negative)"),
     ]
     ax.legend(handles=legend_elems, loc="upper right", frameon=True)
 
@@ -1076,31 +1077,31 @@ def visualize_peak_maps(
     save_path: str = None,
     title: str = None,
     batch_index: int = 0,
-    peak_reduce: str = "mean",  # "mean" 或 "sum"，用于确定峰值时刻 t*
+    peak_reduce: str = "mean",  # "mean" or "sum", used to determine peak timestep t*
     vmin: float = None,
     vmax: float = None,
 ):
     """
-    绘制峰值二维分布图：左 true、 中 pred、 右 error=pred-true。
-    y_true_h, y_pred_h: [B, H, W, T] 的张量（只含水深通道）
-    peak_reduce: 用 "mean"（全域平均）或 "sum"（全域总量）来确定峰值时刻 t*
+    Plot peak 2D distribution maps: left=true, center=pred, right=error (pred-true).
+    y_true_h, y_pred_h: tensors of shape [B, H, W, T] (water depth channel only).
+    peak_reduce: use "mean" (global average) or "sum" (global total) to determine peak timestep t*.
     """
     assert y_true_h.ndim == 4 and y_pred_h.ndim == 4, "Expect [B,H,W,T]"
     device = y_true_h.device
 
-    # 选择 t*：使全域平均/总量达到峰值
+    # Select t*: timestep where global average/total reaches its peak
     if peak_reduce == "sum":
         score_t = y_true_h.sum(dim=(0, 1, 2))      # [T]
     else:
         score_t = y_true_h.mean(dim=(0, 1, 2))     # [T]
     t_star = int(torch.argmax(score_t).item())
 
-    # 取 batch_index 对应帧
+    # Extract frame for batch_index at t*
     true_peak = y_true_h[batch_index, :, :, t_star].numpy()
     pred_peak = y_pred_h[batch_index, :, :, t_star].numpy()
     err_peak  = pred_peak - true_peak
 
-    # 色阶：true/pred 统一；error 走对称色阶
+    # Color scale: unified for true/pred; symmetric for error
     if vmin is None or vmax is None:
         vmin = np.nanmin([true_peak.min(), pred_peak.min()]) if vmin is None else vmin
         vmax = np.nanmax([true_peak.max(), pred_peak.max()]) if vmax is None else vmax

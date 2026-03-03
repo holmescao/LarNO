@@ -95,7 +95,7 @@ class CGRU_cell_V2(nn.Module):
         combined_1 = torch.cat((x, htprev), 1)
 
         if self.use_checkpoint:
-            # ✅ 每次创建新 wrapper 和 dummy_tensor
+            # Create a new wrapper and dummy tensor each call (required for gradient checkpointing)
             wrapper1 = ModuleWrapperIgnores2ndArg(self.conv1)
             dummy_tensor1 = torch.ones(1, dtype=torch.float32, requires_grad=True, device=x.device)
             gates = checkpoint(wrapper1, combined_1, dummy_tensor1)
@@ -113,7 +113,7 @@ class CGRU_cell_V2(nn.Module):
             combined_2 = torch.cat((x, etprev, r * dtprev), 1)
 
         if self.use_checkpoint:
-            # ✅ 再次动态创建
+            # Create wrapper and dummy tensor again for the second conv (required for gradient checkpointing)
             wrapper2 = ModuleWrapperIgnores2ndArg(self.conv2)
             dummy_tensor2 = torch.ones(1, dtype=torch.float32, requires_grad=True, device=x.device)
             ht = checkpoint(wrapper2, combined_2, dummy_tensor2)

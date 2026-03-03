@@ -56,7 +56,6 @@ default: &DEFAULT
     tensor_lasso_penalty: 0.0
     joint_factorization: False
     stabilizer: None
-    finetune_lifting_only: False  # train all layers from scratch
     wall_height: 50
 
   # No pre-trained weights (training from scratch)

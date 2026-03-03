@@ -496,7 +496,7 @@ class WMSELoss(nn.Module):
                                     flood_targets,
                                     reduction=self.reduction)
 
-        # 检查 unflood_inputs 和 unflood_targets 是否为空
+        # Skip loss computation if either flooded or non-flooded region is empty
         if unflood_inputs.numel() == 0 or unflood_targets.numel() == 0:
             unflood_loss = torch.tensor(0.0).cuda()
         else:
@@ -531,12 +531,12 @@ class WMSELoss(nn.Module):
 
 class R2Metric(object):
     """
-    R2Metric 用于计算决定系数 R²。
+    Accumulates residual and total sum of squares to compute the coefficient of determination R².
 
     Parameters
     ----------
     reduction : str, optional
-        是否对批次和通道维度进行求和（'sum'）或平均（'mean'），默认为 'sum'。
+        How to reduce over batch and channel dimensions: 'sum' or 'mean'. Default is 'sum'.
     """
 
     def __init__(self, reduction='sum'):
@@ -552,27 +552,27 @@ class R2Metric(object):
 
     def __call__(self, y_pred, y, **kwargs):
         """
-        累积残差平方和和总平方和。
+        Accumulate residual sum of squares and total sum of squares.
 
         Parameters
         ----------
         y_pred : torch.Tensor
-            模型预测值
+            Model predictions.
         y : torch.Tensor
-            真实值
+            Ground-truth values.
         """
-        # 展平所有维度，假设第一个维度是批次
+        # Flatten all dimensions, treating the first dimension as batch
         y_pred_flat = y_pred.view(y_pred.size(0), -1)
         y_flat = y.view(y.size(0), -1)
 
-        # 计算残差平方和
+        # Residual sum of squares
         ss_res = torch.sum((y_flat - y_pred_flat) ** 2, dim=1)  # [batch_size]
 
-        # 计算总平方和
+        # Total sum of squares
         y_mean = torch.mean(y_flat, dim=1, keepdim=True)  # [batch_size, 1]
         ss_tot = torch.sum((y_flat - y_mean) ** 2, dim=1)  # [batch_size]
 
-        # 累积
+        # Accumulate
         if self.reduction == 'sum':
             self.ss_res += torch.sum(ss_res).item()
             self.ss_tot += torch.sum(ss_tot).item()
@@ -582,12 +582,12 @@ class R2Metric(object):
 
     def compute(self):
         """
-        计算最终的 R² 值。
+        Compute the final R² value.
 
         Returns
         -------
         r2 : float
-            决定系数 R²。
+            Coefficient of determination R².
         """
         if self.ss_tot == 0:
             return 0.0

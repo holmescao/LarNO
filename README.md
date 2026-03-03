@@ -538,9 +538,6 @@ finetune:
   enabled: True                          # False = train from scratch
   pretrained_dir: "../../exp/<id>/..."   # path to region1 pretrained checkpoint
   state_dict_name: "<name>_state_dict.pt"
-  # finetune_lifting_only (in tfno2d):
-  #   True  = only update input lifting layer (recommended for fine-tuning)
-  #   False = update all layers (use for scratch training)
 
 # ── Training schedule ─────────────────────────────────────────────────────────
 opt:

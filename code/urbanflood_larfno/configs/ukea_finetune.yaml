@@ -14,7 +14,6 @@ default: &DEFAULT
   #     (100 / 140) so saved weights can be loaded without shape errors.
   #   - hidden_channels MUST match pretrained (32).
   #   - n_layers MUST match pretrained (4).
-  #   - Only the input lifting layer is updated (finetune_lifting_only: True).
   #   - Short schedule: warm_up_iter=1, n_epochs=100.
   #   - eval.locations includes ukea_2m_5min for zero-shot super-resolution test.
   # ─────────────────────────────────────────────────────────────────────────────
@@ -61,7 +60,6 @@ default: &DEFAULT
     tensor_lasso_penalty: 0.0
     joint_factorization: False
     stabilizer: None
-    finetune_lifting_only: True   # only update the input lifting layer
     wall_height: 50  # DEM value assigned to buildings/borders (metres)
 
   # Pre-trained model (region1_20m)
