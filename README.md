@@ -216,7 +216,7 @@ LarNO/
 └── exp/
     └── <expr_id>/                           ← e.g. 20260220_183648_006352
         └── weights/
-            └── <checkpoint_name>/           ← e.g. model_epoch_978_error@0.000021595
+            └── <checkpoint_name>/           ← e.g. model_epoch_992_error@0.000055821
                 └── <checkpoint_name>_state_dict.pt
 ```
 
