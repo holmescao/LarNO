@@ -776,7 +776,7 @@ class Trainer:
             gif_path = os.path.join(epoch_dir, f'{event_name}_epoch{epoch}.gif')
             frames[0].save(
                 gif_path, save_all=True, append_images=frames[1:],
-                duration=20, loop=0,
+                duration=100, loop=0,
             )
             if self.verbose:
                 print(f"Saved comparison GIF to {gif_path}")
