@@ -181,11 +181,12 @@ if __name__ == "__main__":
         model = torch.nn.parallel.DistributedDataParallel(
             model, device_ids=[local_rank], output_device=local_rank, static_graph=True)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.opt.lr_max)
+    print(f"lr:{config.opt.lr_max * (config.data.batch_size/8)}")
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.opt.lr_max * (config.data.batch_size/8))
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer,
-        T_max=config.opt.T_max, # 比如微调 50 轮，这里就填 50
-        eta_min=config.opt.lr_min            # 最终退火到的极小值
+        T_max=config.opt.T_max * (config.data.batch_size/8),
+        eta_min=config.opt.lr_min * (config.data.batch_size/8)
     )
 
     l2loss = LpLoss(d=3, p=2, reduction='mean')

@@ -16,12 +16,13 @@ default: &DEFAULT
   #   - n_layers MUST match pretrained (4).
   #   - Short schedule: warm_up_iter=0, n_epochs=100.
   #   - eval.locations includes ukea_2m_5min for zero-shot super-resolution test.
-  #
+  # 
   # Multi-GPU tip (Linux only):
   #   8-GPU distributed training reduces MAE by ~50% vs single-GPU for fine-tuning.
   #   To enable: set distributed.use_distributed=True and data.batch_size=8, then run:
   #     torchrun --nproc_per_node=8 train.py --config ukea_finetune.yaml
   #   (For scratch training, multi-GPU gives no accuracy gain over single-GPU.)
+  # ─────────────────────────────────────────────────────────────────────────────
   # ─────────────────────────────────────────────────────────────────────────────
 
   #General
@@ -94,7 +95,7 @@ default: &DEFAULT
 
   # Dataset
   data:
-    batch_size: 1
+    batch_size: 1 # default is 1; please set to N (one sample per GPU) if use_distributed: True
     n_train: 1
     train_resolution: 50*120
     n_test: 1

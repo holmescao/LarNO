@@ -95,7 +95,7 @@ Common examples:
 ```bash
 # CUDA 11.8
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-
+or
 # CUDA 12.6
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 ```
@@ -200,7 +200,7 @@ configs/
 
 ## 3. Pre-trained Weights
 
-LarNO provides a **Futian (region1_20m) pre-trained checkpoint**, trained to paper accuracy on the Shenzhen case study. This checkpoint is used for:
+We provides a **Futian (region1_20m) pre-trained checkpoint**, trained to paper accuracy on the Shenzhen case study. This checkpoint is used for:
 
 - **Quick Test** ([Section 5](#5-quick-test-with-pre-trained-weights-region1)) — run inference on region1 immediately, no training required
 - **Scenario A** ([Section 6](#6-scenario-a--fine-tune-on-ukea-recommended)) — fine-tune on UKEA in just 100 epochs
@@ -298,7 +298,7 @@ eval:
 python test.py --config urbanflood_config_2d.yaml --expr_id 20260220_183648_006352
 
 # Windows:
-conda run -n larno python test.py --config urbanflood_config_2d.yaml --expr_id 20260220_183648_006352
+python test.py --config urbanflood_config_2d.yaml --expr_id 20260220_183648_006352
 ```
 
 > Replace `20260220_183648_006352` with the actual experiment folder name from your downloaded pre-trained weights.
