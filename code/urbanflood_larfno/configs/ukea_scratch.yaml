@@ -8,9 +8,9 @@ default: &DEFAULT
   #
   # Key settings:
   #   - Lightweight architecture to reduce training time:
-  #       n_modes_height=12 (~H/4 for 50-row UKEA grid)
-  #       n_modes_width=30  (~W/4 for 120-col UKEA grid)
-  #       hidden_channels=16, n_layers=2
+  #       n_modes_height=25 (~H/2 for 50-row UKEA grid)
+  #       n_modes_width=60  (~W/2 for 120-col UKEA grid)
+  #       hidden_channels=32, n_layers=2
   #   - Increase n_modes / hidden_channels / n_layers for better accuracy.
   #   - finetune.enabled=False (random initialisation, all layers trained)
   #   - Longer schedule: warm_up_iter=10, n_epochs=1000
@@ -33,11 +33,11 @@ default: &DEFAULT
   # FNO model architecture
   tfno2d:
     data_channels: 13
-    n_modes_height: 12      # ~H/4 for 50-row UKEA grid
-    n_modes_width: 30       # ~W/4 for 120-col UKEA grid
-    hidden_channels: 16
+    n_modes_height: 25      # ~H/2 for 50-row UKEA grid, can increase up to H = 50 for better accuracy
+    n_modes_width: 60       # ~W/2 for 120-col UKEA grid, can increase up to W = 120 for better accuracy
+    hidden_channels: 32
     projection_channel_ratio: 2
-    n_layers: 2
+    n_layers: 2  # default lightweight; increase up to 4 for better accuracy
     domain_padding: None
     domain_padding_mode: 'one-sided'
     fft_norm: 'forward'

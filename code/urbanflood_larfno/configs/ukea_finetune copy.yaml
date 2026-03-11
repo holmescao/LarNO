@@ -65,8 +65,8 @@ default: &DEFAULT
   # Pre-trained model (region1_20m)
   finetune:
     enabled: True
-    pretrained_dir: "../../exp/20251021_032243_684871/weights/model_epoch_972_error@0.000022585"
-    state_dict_name: "model_epoch_972_error@0.000022585_state_dict.pt"
+    pretrained_dir: "../../exp/20260220_183648_006352/weights/model_epoch_992_error@0.000055821"
+    state_dict_name: "model_epoch_992_error@0.000055821_state_dict.pt"
 
   # Optimizer and scheduler
   opt:
@@ -90,9 +90,9 @@ default: &DEFAULT
   data:
     batch_size: 1
     n_train: 1
-    train_resolution: 400*560
+    train_resolution: 50*120
     n_test: 1
-    test_resolutions: 400*560
+    test_resolutions: 50*120
     test_batch_sizes: 1
     encode_input: True
     encode_output: False

@@ -1,5 +1,12 @@
 import os
 import sys
+import builtins
+_builtin_open = builtins.open
+def _utf8_open(file, mode='r', buffering=-1, encoding=None, errors=None, **kw):
+    if encoding is None and 'b' not in mode:
+        encoding = 'utf-8'
+    return _builtin_open(file, mode, buffering, encoding=encoding, errors=errors, **kw)
+builtins.open = _utf8_open
 import argparse
 import datetime
 import math
@@ -175,9 +182,14 @@ if __name__ == "__main__":
             model, device_ids=[local_rank], output_device=local_rank, static_graph=True)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.opt.lr_max)
-    scheduler = WarmUpCosineAnneal(
-        optimizer, config.opt.warm_up_iter, config.opt.T_max,
-        config.opt.lr_max, config.opt.lr_min)
+    # scheduler = WarmUpCosineAnneal(
+    #     optimizer, config.opt.warm_up_iter, config.opt.T_max,
+    #     config.opt.lr_max, config.opt.lr_min)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=config.opt.T_max, # 比如微调 50 轮，这里就填 50
+        eta_min=config.opt.lr_min            # 最终退火到的极小值
+    )
 
     l2loss = LpLoss(d=3, p=2, reduction='mean')
     h1loss = H1Loss(d=3, reduction='mean')

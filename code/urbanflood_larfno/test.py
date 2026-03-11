@@ -1,6 +1,13 @@
 import os
-import re
 import sys
+import builtins
+_builtin_open = builtins.open
+def _utf8_open(file, mode='r', buffering=-1, encoding=None, errors=None, **kw):
+    if encoding is None and 'b' not in mode:
+        encoding = 'utf-8'
+    return _builtin_open(file, mode, buffering, encoding=encoding, errors=errors, **kw)
+builtins.open = _utf8_open
+import re
 import argparse
 import time
 from pathlib import Path

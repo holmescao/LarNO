@@ -472,7 +472,7 @@ class WMSELoss(nn.Module):
         super(WMSELoss, self).__init__()
 
         self.factor = 10
-        print(f"self.factor:{self.factor}")
+        # print(f"self.factor:{self.factor}")
         self.reduction = reduction
 
     def forward(self, inputs, targets):

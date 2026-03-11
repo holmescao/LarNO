@@ -37,11 +37,11 @@ default: &DEFAULT
   # FNO model architecture
   tfno2d:
     data_channels: 13
-    n_modes_height: 40     # ~H/4 for 400-row region1 grid; increase for finer detail
-    n_modes_width: 56      # ~W/4 for 560-col region1 grid
-    hidden_channels: 16
+    n_modes_height: 40    # default lightweight; increase up to 100 to reproduce paper accuracy
+    n_modes_width:  56    # default lightweight; increase up to 140 to reproduce paper accuracy
+    hidden_channels: 16   # default lightweight; increase to 32 to reproduce paper accuracy
     projection_channel_ratio: 2
-    n_layers: 2
+    n_layers: 2       # default lightweight; increase to 4 to reproduce paper accuracy
     domain_padding: None
     domain_padding_mode: 'one-sided'
     fft_norm: 'forward'
