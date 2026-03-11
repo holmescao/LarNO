@@ -371,8 +371,8 @@ python test.py --config ukea_finetune.yaml --expr_id <timestamp>
 
 ```yaml
 tfno2d:
-  n_modes_height: 25    # increase up to H = 50 for better accuracy
-  n_modes_width:  60    # increase up to W = 120 for better accuracy
+  n_modes_height: 25    # increase up to 50 for better accuracy
+  n_modes_width:  60    # increase up to 120 for better accuracy
   hidden_channels: 32
   n_layers: 2           # increase to 4 for better accuracy
 
