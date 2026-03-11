@@ -182,9 +182,6 @@ if __name__ == "__main__":
             model, device_ids=[local_rank], output_device=local_rank, static_graph=True)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.opt.lr_max)
-    # scheduler = WarmUpCosineAnneal(
-    #     optimizer, config.opt.warm_up_iter, config.opt.T_max,
-    #     config.opt.lr_max, config.opt.lr_min)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer,
         T_max=config.opt.T_max, # 比如微调 50 轮，这里就填 50

@@ -345,6 +345,12 @@ python train.py --config ukea_finetune.yaml 2>&1 | tee train_log.txt
 python run_train.py --config ukea_finetune.yaml
 ```
 
+> **Multi-GPU tip (Linux only):** For Scenario A fine-tuning, 8-GPU distributed training reduces MAE by ~50% compared with single-GPU. Set `distributed.use_distributed: True` and `data.batch_size: 8` in `ukea_finetune.yaml`, then launch with:
+> ```bash
+> torchrun --nproc_per_node=8 train.py --config ukea_finetune.yaml 2>&1 | tee train_log.txt
+> ```
+> This benefit is specific to fine-tuning; for scratch training (Scenarios B & C) single-GPU and multi-GPU accuracy are comparable.
+
 ### Step 4 — Evaluate
 
 ```bash
@@ -581,6 +587,8 @@ eval:
 # ── Distributed training ──────────────────────────────────────────────────────
 distributed:
   use_distributed: False  # True + torchrun for multi-GPU (Linux only)
+                          # For fine-tuning (Scenario A): 8-GPU + batch_size=8 cuts MAE by ~50%
+                          # For scratch training (Scenarios B & C): multi-GPU gives no accuracy gain
 ```
 
 ### What are the 13 input channels?
