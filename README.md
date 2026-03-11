@@ -1,11 +1,20 @@
 # Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO
 
+<p align="center">
+  <a href="https://www.sciencedirect.com/journal/journal-of-hydrology"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Under%20Review-blue" alt="Journal of Hydrology"></a>
+  <a href="https://github.com/holmescao/LarNO"><img src="https://img.shields.io/github/stars/holmescao/LarNO?style=social" alt="GitHub Stars"></a>
+  <a href="https://holmescao.github.io/datasets/LarNO"><img src="https://img.shields.io/badge/Dataset-LarNO-orange" alt="Dataset"></a>
+  <a href="https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+</p>
+
 ---
 
-## News
-- **[02/03/2026]** Full end-to-end reproduction tutorial released — train and test LarNO with **a single GPU on [AutoDL](https://www.autodl.com/)**.
-- **[02/03/2026]** Code and benchmark dataset publicly released.
+<p align="center">
+  <img src="code/urbanflood_larfno/assets/demo_event.gif" width="820"/>
+  <br><em><strong>LarNO vs. MIKE+ reference — animated water depth comparison (5-min steps, 6-hour flood event, Futian district Shenzhen, ~100 km²).</strong> Left: MIKE+ hydraulic solver (reference). Right: LarNO prediction. LarNO delivers ~940× faster inference than MIKE+ with mm-level depth accuracy (20 m resolution, released dataset).</em>
+</p>
 
+---
 
 > **[Journal of Hydrology]** &nbsp;|&nbsp;
 > [Paper](#citation) &nbsp;|&nbsp;
@@ -15,11 +24,23 @@
 
 ---
 
+> 🧪 **Want to try LarNO instantly — no installation needed?**
+> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)** to run inference on the Futian flood dataset with pre-trained weights in ~5 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
+
+---
+
 > 🚀 **New to deep learning or don't have a GPU?**
 > You can train and test LarNO with **a single GPU** by renting one on [AutoDL](https://www.autodl.com/) for as little as ¥1–3/hour — no local hardware required.
 > A full step-by-step guide using the browser-based JupyterLab is provided in [Section 13 — Cloud GPU: AutoDL Guide](#13-cloud-gpu--autodl-guide). No extra software installation needed.
 >
 > **Before you start:** download the dataset (see [Section 2 — Datasets](#2-datasets)) and pre-trained weights (see [Section 3 — Pre-trained Weights](#3-pre-trained-weights)) to your local machine first.
+
+---
+
+## News
+- **[12/03/2026]** Interactive demo released — run LarNO inference in your browser with **[Google Colab](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)**, no installation needed.
+- **[02/03/2026]** Full end-to-end reproduction tutorial released — train and test LarNO with **a single GPU on [AutoDL](https://www.autodl.com/)**.
+- **[02/03/2026]** Code released on **[GitHub](https://github.com/holmescao/LarNO)** and benchmark **[dataset](https://holmescao.github.io/datasets/LarNO)** publicly released.
 
 ---
 

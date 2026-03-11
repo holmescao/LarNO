@@ -745,7 +745,7 @@ class Trainer:
         from PIL import Image
 
         B, H, W, T = y_true_h.shape
-        vmax = min(float(max(y_true_h.max(), y_pred_h.max())), 2.0)
+        vmax = min(float(max(y_true_h.max(), y_pred_h.max())), 1.0)
         vmin = 0.0
         cmap = plt.cm.get_cmap('Blues').copy()
         cmap.set_bad(color='white')
@@ -753,17 +753,28 @@ class Trainer:
         step = max(1, T // 36)   # at most 36 frames → compact GIF
         frames = []
         for t in range(0, T, step):
-            fig, axes = plt.subplots(1, 2, figsize=(8, 4), dpi=80)
+            fig, axes = plt.subplots(1, 2, figsize=(9, 4), dpi=150)
+            fig.patch.set_facecolor('white')
+            im_last = None
             for ax, img, title in [
-                (axes[0], y_true_h[0, :, :, t], f'Reference  ({t} min)'),
-                (axes[1], y_pred_h[0, :, :, t], f'LarNO  ({t} min)'),
+                (axes[0], y_true_h[0, :, :, t], f'Reference  ({t*5} min)'),
+                (axes[1], y_pred_h[0, :, :, t], f'LarNO  ({t*5} min)'),
             ]:
                 im = ax.imshow(img, cmap=cmap, vmin=vmin, vmax=vmax)
-                ax.set_title(title, fontsize=9)
-                ax.axis('off')
-                plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label='Depth (m)')
-            plt.suptitle(event_name, fontsize=10)
-            plt.tight_layout()
+                ax.set_title(title, fontsize=14, fontweight='bold', pad=6)
+                ax.set_xticks([])
+                ax.set_yticks([])
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_edgecolor('black')
+                    spine.set_linewidth(1.5)
+                im_last = im
+            fig.subplots_adjust(left=0.03, right=0.87, top=0.91, bottom=0.05, wspace=0.12)
+            cbar_ax = fig.add_axes([0.895, 0.08, 0.022, 0.76])
+            cbar = fig.colorbar(im_last, cax=cbar_ax)
+            cbar.set_label('Depth (m)', fontsize=11)
+            cbar.ax.tick_params(labelsize=9)
+            # plt.suptitle(event_name, fontsize=15)
 
             buf = io.BytesIO()
             plt.savefig(buf, format='png')

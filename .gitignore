@@ -1,5 +1,11 @@
-# ── Claude Code workspace (internal, not for repo) ───────────────────────────
+# ── Claude Code workspace & internal planning docs (not for repo) ────────────
 .claude/
+CLAUDE.md
+encapsulated-sniffing-frost.md
+Manuscript.pdf
+已做的策略.md
+开源推进.md
+正在执行的策略.md
 
 # ── Large data & outputs (download separately) ──────────────────────────────
 benchmark/
