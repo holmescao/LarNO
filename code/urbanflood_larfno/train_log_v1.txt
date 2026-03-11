@@ -1,0 +1,2418 @@
+Experiment start! Now:  20260311_222521_639738
+###############################
+#####    CONFIGURATION    #####
+###############################
+
+Steps:
+------
+ (1) YamlConfig with config_file=ukea_finetune.yaml, config_name=default, config_folder=./configs
+ (2) ArgparseConfig with additional config={'config_name': None, 'config_file': None}
+ (3) YamlConfig with config_file=None, config_name=None, config_folder=../configs
+
+-------------------------------
+
+Configuration:
+--------------
+
+n_params_baseline=None
+verbose=True
+arch=tfno2d
+distributed.use_distributed=False
+distributed.wireup_info=mpi
+distributed.wireup_store=tcp
+distributed.model_parallel_size=2
+distributed.seed=666
+tfno2d.data_channels=13
+tfno2d.n_modes_height=100
+tfno2d.n_modes_width=140
+tfno2d.hidden_channels=64
+tfno2d.projection_channel_ratio=2
+tfno2d.n_layers=4
+tfno2d.domain_padding=None
+tfno2d.domain_padding_mode=one-sided
+tfno2d.fft_norm=forward
+tfno2d.norm=group_norm
+tfno2d.skip=linear
+tfno2d.implementation=factorized
+tfno2d.separable=0
+tfno2d.preactivation=0
+tfno2d.use_channel_mlp=1
+tfno2d.channel_mlp_expansion=0.5
+tfno2d.channel_mlp_dropout=0
+tfno2d.factorization=None
+tfno2d.rank=1.0
+tfno2d.fixed_rank_modes=None
+tfno2d.dropout=0.0
+tfno2d.tensor_lasso_penalty=0.0
+tfno2d.joint_factorization=False
+tfno2d.stabilizer=None
+tfno2d.wall_height=50
+finetune.enabled=True
+finetune.pretrained_dir=../../exp/20251021_032243_684871/weights/model_epoch_972_error@0.000022585
+finetune.state_dict_name=model_epoch_972_error@0.000022585_state_dict.pt
+opt.n_epochs=100
+opt.learning_rate=0.01
+opt.training_loss=WMSE
+opt.weight_decay=0.0001
+opt.amp_autocast=False
+opt.scheduler_T_max=100
+opt.scheduler_patience=5
+opt.scheduler=WarmUpCosineAnneal
+opt.step_size=60
+opt.gamma=0.5
+opt.warm_up_iter=1
+opt.T_max=100
+opt.lr_max=0.01
+opt.lr_min=0.0001
+opt.window_size=8
+data.batch_size=1
+data.n_train=1
+data.train_resolution=50*120
+data.n_test=1
+data.test_resolutions=50*120
+data.test_batch_sizes=1
+data.encode_input=True
+data.encode_output=False
+data.num_workers_train=0
+data.num_workers_test=0
+data.train_list=ukea_train.txt
+data.test_list=ukea_test.txt
+data.data_root=../../benchmark/urbanflood/
+data.exp_root=../../exp
+data.train_location=ukea_8m_5min
+eval.flood_threshold=0.03
+eval.locations=ukea_8m_5min,ukea_2m_5min
+patching.levels=0
+patching.padding=0
+patching.stitching=False
+
+###############################
+C:\Users\holme\.conda\envs\larno\lib\site-packages\torch\nn\modules\module.py:2482: UserWarning: Casting complex values to real discards the imaginary part (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\aten\src\ATen\native\Copy.cpp:307.)
+  param.copy_(input_param)
+Loaded Dynamic2DFlood train with 8 samples (location:ukea_8m_5min, locations:1, events:8)
+Loaded Dynamic2DFlood test with 4 samples (location:ukea_8m_5min, locations:1, events:4)
+Loading pretrained weights from: ../../exp/20251021_032243_684871/weights/model_epoch_972_error@0.000022585\model_epoch_972_error@0.000022585_state_dict.pt
+Pretrained weights loaded successfully.
+self.factor:10
+self.factor:10
+
+ MODEL 
+ TFNO2d(
+  (positional_embedding): GridEmbeddingND()
+  (fno_blocks): FNOBlocks(
+    (convs): ModuleList(
+      (0-3): 4 x SpectralConv(
+        (weight): DenseTensor(shape=torch.Size([64, 64, 100, 71]), rank=None)
+      )
+    )
+    (fno_skips): ModuleList(
+      (0-3): 4 x Flattened1dConv(
+        (conv): Conv1d(64, 64, kernel_size=(1,), stride=(1,), bias=False)
+      )
+    )
+    (channel_mlp): ModuleList(
+      (0-3): 4 x ChannelMLP(
+        (fcs): ModuleList(
+          (0): Conv1d(64, 32, kernel_size=(1,), stride=(1,))
+          (1): Conv1d(32, 64, kernel_size=(1,), stride=(1,))
+        )
+      )
+    )
+    (channel_mlp_skips): ModuleList(
+      (0-3): 4 x SoftGating()
+    )
+    (norm): ModuleList(
+      (0-7): 8 x GroupNorm(1, 64, eps=1e-05, affine=True)
+    )
+  )
+  (lifting): ChannelMLP(
+    (fcs): ModuleList(
+      (0): Conv1d(15, 128, kernel_size=(1,), stride=(1,))
+      (1): Conv1d(128, 64, kernel_size=(1,), stride=(1,))
+    )
+  )
+  (projection): ChannelMLP(
+    (fcs): ModuleList(
+      (0): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (1): Conv1d(128, 1, kernel_size=(1,), stride=(1,))
+    )
+  )
+  (convgru): CGRU_cell(
+    (conv1): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+      (1): GroupNorm(4, 128, eps=1e-05, affine=True)
+    )
+    (conv2): Sequential(
+      (0): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1))
+      (1): GroupNorm(2, 64, eps=1e-05, affine=True)
+    )
+    (conv1_module_wrapper): ModuleWrapperIgnores2ndArg(
+      (module): Sequential(
+        (0): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+        (1): GroupNorm(4, 128, eps=1e-05, affine=True)
+      )
+    )
+    (conv2_module_wrapper): ModuleWrapperIgnores2ndArg(
+      (module): Sequential(
+        (0): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1))
+        (1): GroupNorm(2, 64, eps=1e-05, affine=True)
+      )
+    )
+  )
+)
+
+ OPTIMIZER 
+ Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    decoupled_weight_decay: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    initial_lr: 0.01
+    lr: 0.0
+    maximize: False
+    weight_decay: 0
+)
+
+ SCHEDULER 
+ <torch.optim.lr_scheduler.LambdaLR object at 0x000001B936BE4970>
+
+ LOSSES 
+ * Train: WMSELoss()
+ * Test: {'h1': <neuralop.losses.data_losses.H1Loss object at 0x000001B936BDA970>, 'l2': <neuralop.losses.data_losses.LpLoss object at 0x000001B936BDA1F0>}
+
+ Beginning Training...
+
+D:\BaiduSyncdisk\code_repository\urbanflood\larFNO\project\code\urbanflood_larfno\neuralop\training\trainer.py:176: UserWarning: training_loss.reduction='mean'. This means that the loss is initialized to average across the batch dim. The Trainer expects losses to sum across the batch dim.
+  warnings.warn(f"{training_loss.reduction=}. This means that the loss is "
+Training on 8 samples
+Testing on 4 samples
+Starting epoch 1
+
+  0%|          | 0/8 [00:00<?, ?it/s]C:\Users\holme\.conda\envs\larno\lib\site-packages\tltorch\factorized_tensors\factorized_tensors.py:66: UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\python_variable_indexing.cpp:312.)
+  return self.__class__(self.tensor[indices])
+D:\BaiduSyncdisk\code_repository\urbanflood\larFNO\project\code\urbanflood_larfno\neuralop\layers\spectral_convolution.py:470: UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\python_variable_indexing.cpp:312.)
+  out_fft[slices_x] = self._contract(x[slices_x], weight, separable=self.separable)
+
+ 12%|█▎        | 1/8 [00:07<00:52,  7.50s/it]
+ 25%|██▌       | 2/8 [00:09<00:25,  4.27s/it]
+ 38%|███▊      | 3/8 [00:11<00:16,  3.21s/it]
+ 50%|█████     | 4/8 [00:13<00:10,  2.72s/it]
+ 62%|██████▎   | 5/8 [00:15<00:07,  2.60s/it]
+ 75%|███████▌  | 6/8 [00:18<00:05,  2.53s/it]
+ 88%|████████▊ | 7/8 [00:20<00:02,  2.33s/it]
+100%|██████████| 8/8 [00:22<00:00,  2.21s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[1] time=22.08, lr [0.0], train_err=0.007423422
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_1_error@0.007423422
+Starting epoch 2
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.92s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.91s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.90s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.90s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.90s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.90s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.90s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[2] time=15.22, lr [0.01], train_err=0.008041114
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 3
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.91s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.90s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.89s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.90s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.90s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.91s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.91s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[3] time=15.23, lr [0.009997507884796766], train_err=0.005691610
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_3_error@0.005691610
+Starting epoch 4
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.93s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.92s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.92s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.92s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[4] time=15.37, lr [0.009990034048535828], train_err=0.006616284
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 5
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.90s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.90s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.90s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.91s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.90s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.91s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[5] time=15.25, lr [0.009977586016736768], train_err=0.008074400
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 6
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.89s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.90s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.90s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.90s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.91s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.91s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[6] time=15.26, lr [0.009960176323512437], train_err=0.008149351
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 7
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.97s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[7] time=15.45, lr [0.009937822498948153], train_err=0.008996671
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 8
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.98s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.96s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.95s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.95s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.96s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[8] time=15.63, lr [0.009910547051450398], train_err=0.009137007
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 9
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.92s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.93s/it]
+ 88%|████████▊ | 7/8 [00:13<00:02,  2.00s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.99s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[9] time=15.66, lr [0.009878377445082766], train_err=0.008768866
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 10
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.95s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.95s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.95s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.95s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.98s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[10] time=15.69, lr [0.009841346071911963], train_err=0.007025400
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 11
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.96s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.98s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.98s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.96s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[11] time=15.54, lr [0.009799490219391763], train_err=0.008522921
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 12
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.91s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.91s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.91s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.91s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[12] time=15.30, lr [0.00975285203281768], train_err=0.008865591
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 13
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.89s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.90s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.90s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.90s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.90s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.90s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.90s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[13] time=15.27, lr [0.009701478472890247], train_err=0.007544693
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 14
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.94s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.94s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[14] time=15.53, lr [0.00964542126842956], train_err=0.007096679
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 15
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.97s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.98s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.99s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.98s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.98s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.97s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.96s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.97s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[15] time=15.78, lr [0.009584736864288745], train_err=0.007927390
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 16
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.97s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.97s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.96s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.96s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.97s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.96s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[16] time=15.65, lr [0.009519486364518777], train_err=0.006006354
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 17
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.90s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.91s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.92s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.92s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.91s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[17] time=15.32, lr [0.009449735470841871], train_err=0.008133260
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 18
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.99s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.97s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  2.00s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.99s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.96s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[18] time=15.59, lr [0.009375554416495437], train_err=0.007918944
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 19
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.97s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.91s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.92s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[19] time=15.40, lr [0.009297017895513137], train_err=0.009054628
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 20
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.97s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.96s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.94s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.92s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.92s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.91s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[20] time=15.41, lr [0.009214204987514346], train_err=0.007472326
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 21
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.01s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.97s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.97s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.97s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.97s/it]
+ 75%|███████▌  | 6/8 [00:11<00:04,  2.00s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  2.00s/it]
+100%|██████████| 8/8 [00:15<00:00,  2.00s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[21] time=15.91, lr [0.009127199078077672], train_err=0.007544302
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 22
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.98s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.98s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.97s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.97s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.97s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.96s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[22] time=15.68, lr [0.009036087774778741], train_err=0.007472288
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 23
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.93s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.96s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.95s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.96s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.95s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[23] time=15.60, lr [0.008940962818976798], train_err=0.007113963
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 24
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.99s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.01s/it]
+ 38%|███▊      | 3/8 [00:06<00:09,  2.00s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.98s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.98s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.99s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.98s/it]
+100%|██████████| 8/8 [00:15<00:00,  2.00s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[24] time=15.94, lr [0.00884191999343894], train_err=0.006065282
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 25
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.96s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.91s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.93s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[25] time=15.38, lr [0.008739059025894984], train_err=0.006970684
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 26
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.91s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.90s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.90s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.90s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.90s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[26] time=15.24, lr [0.008632483488620097], train_err=0.006037212
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 27
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.91s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.94s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[27] time=15.48, lr [0.00852230069414629], train_err=0.006553519
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 28
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.96s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.95s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.97s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.95s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[28] time=15.54, lr [0.008408621587207805], train_err=0.005167644
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_28_error@0.005167644
+Starting epoch 29
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.91s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.94s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.95s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.95s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.94s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[29] time=15.54, lr [0.008291560633029162], train_err=0.005411133
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 30
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.97s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.92s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.91s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[30] time=15.41, lr [0.008171235702068387], train_err=0.009036881
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 31
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.91s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.91s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.92s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.92s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[31] time=15.44, lr [0.00804776795133145], train_err=0.007002992
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 32
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.93s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.96s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.95s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.97s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.96s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.98s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.99s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[32] time=15.79, lr [0.007921281702377431], train_err=0.005544525
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 33
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.03s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.03s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.01s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.01s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.98s/it]
+ 75%|███████▌  | 6/8 [00:12<00:03,  2.00s/it]
+ 88%|████████▊ | 7/8 [00:14<00:01,  1.99s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.01s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[33] time=16.06, lr [0.007791904316137247], train_err=0.036498517
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 34
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.03s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.01s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  2.00s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.98s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.99s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.02s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.09s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[34] time=16.30, lr [0.007659766064671988], train_err=0.008443882
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 35
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.07s/it]
+ 25%|██▌       | 2/8 [00:04<00:11,  1.99s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.97s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.98s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.96s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.96s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.94s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.95s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[35] time=15.68, lr [0.007525000000000002], train_err=0.007395173
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 36
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.90s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.91s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.91s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.91s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.91s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.91s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.92s/it]
+100%|██████████| 8/8 [00:17<00:00,  2.52s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[36] time=17.21, lr [0.007387741820124781], train_err=0.007637824
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 37
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:03<00:21,  3.04s/it]
+ 25%|██▌       | 2/8 [00:05<00:15,  2.61s/it]
+ 38%|███▊      | 3/8 [00:07<00:11,  2.38s/it]
+ 50%|█████     | 4/8 [00:09<00:09,  2.27s/it]
+ 62%|██████▎   | 5/8 [00:11<00:06,  2.21s/it]
+ 75%|███████▌  | 6/8 [00:13<00:04,  2.20s/it]
+ 88%|████████▊ | 7/8 [00:15<00:02,  2.18s/it]
+100%|██████████| 8/8 [00:18<00:00,  2.16s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[37] time=18.09, lr [0.007248129732398583], train_err=0.007782334
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 38
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.94s/it]
+ 25%|██▌       | 2/8 [00:04<00:13,  2.30s/it]
+ 38%|███▊      | 3/8 [00:07<00:12,  2.57s/it]
+ 50%|█████     | 4/8 [00:10<00:10,  2.60s/it]
+ 62%|██████▎   | 5/8 [00:13<00:08,  2.84s/it]
+ 75%|███████▌  | 6/8 [00:15<00:05,  2.58s/it]
+ 88%|████████▊ | 7/8 [00:17<00:02,  2.36s/it]
+100%|██████████| 8/8 [00:19<00:00,  2.24s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[38] time=19.25, lr [0.007106304314359339], train_err=0.006866991
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 39
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.92s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.92s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.92s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[39] time=15.42, lr [0.006962408372180987], train_err=0.007777537
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 40
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:11<00:08,  2.67s/it]
+ 75%|███████▌  | 6/8 [00:16<00:06,  3.26s/it]
+ 88%|████████▊ | 7/8 [00:20<00:03,  3.64s/it]
+100%|██████████| 8/8 [00:24<00:00,  3.89s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[40] time=24.96, lr [0.0068165867968797665], train_err=0.007743070
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 41
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.37s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.38s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.39s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.38s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.38s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.38s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.38s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[41] time=35.05, lr [0.006668986418421239], train_err=0.008936287
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 42
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.35s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.36s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.37s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.38s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.37s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.37s/it]
+100%|██████████| 8/8 [00:34<00:00,  4.37s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[42] time=34.97, lr [0.0065197558578749615], train_err=0.006798353
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 43
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.42s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.38s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.39s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.43s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.43s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.42s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[43] time=35.30, lr [0.006369045377765673], train_err=0.007230253
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 44
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.36s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.40s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.42s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.42s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.41s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.41s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[44] time=35.25, lr [0.006217006730771666], train_err=0.007468822
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 45
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.40s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.40s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.41s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.42s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.42s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[45] time=35.30, lr [0.006063793006922695], train_err=0.006741454
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 46
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.43s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.43s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.41s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.42s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.42s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.40s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.41s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[46] time=35.30, lr [0.005909558479451307], train_err=0.006708786
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 47
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.39s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.39s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.44s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.45s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.43s/it]
+ 88%|████████▊ | 7/8 [00:31<00:04,  4.44s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.44s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[47] time=35.46, lr [0.005754458449452763], train_err=0.007388115
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 48
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.40s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.44s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.44s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.44s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.44s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.44s/it]
+ 88%|████████▊ | 7/8 [00:31<00:04,  4.42s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.42s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[48] time=35.42, lr [0.005598649089510005], train_err=0.006409602
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 49
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.42s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.42s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.42s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.42s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.41s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[49] time=35.30, lr [0.005442287286441103], train_err=0.006651164
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 50
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.42s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.40s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.42s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.42s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.42s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.42s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[50] time=35.33, lr [0.005285530483327526], train_err=0.007036780
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 51
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.40s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.39s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[51] time=35.20, lr [0.0051285365209823], train_err=0.006776728
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 52
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.42s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.41s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.42s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.41s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[52] time=35.29, lr [0.004971463479017701], train_err=0.006409306
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 53
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:31,  4.47s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.43s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.41s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.41s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.40s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.39s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[53] time=35.23, lr [0.0048144695166724765], train_err=0.006297220
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 54
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.36s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.36s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.36s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.38s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.39s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.39s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.38s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[54] time=35.04, lr [0.004657712713558897], train_err=0.007009034
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 55
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.37s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.39s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.38s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.39s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[55] time=35.18, lr [0.004501350910489996], train_err=0.006402278
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 56
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.40s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.41s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.38s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.38s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[56] time=35.12, lr [0.004345541550547239], train_err=0.006860354
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 57
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.40s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.39s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[57] time=35.20, lr [0.004190441520548696], train_err=0.007489573
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 58
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.38s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.38s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.37s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.38s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[58] time=35.16, lr [0.0040362069930773075], train_err=0.005837716
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 59
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.38s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.40s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.39s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.38s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.39s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.39s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.39s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.39s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[59] time=35.12, lr [0.0038829932692283345], train_err=0.006121734
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 60
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.38s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.40s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.40s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.41s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.41s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.40s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[60] time=35.22, lr [0.0037309546222343277], train_err=0.007631302
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 61
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.40s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.40s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.39s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.39s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.39s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[61] time=35.20, lr [0.0035802441421250407], train_err=0.007054523
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 62
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.41s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.42s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.41s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.40s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.38s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.38s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.39s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[62] time=35.17, lr [0.003431013581578763], train_err=0.005969079
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 63
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.42s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.39s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.39s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.41s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[63] time=35.22, lr [0.003283413203120235], train_err=0.006346729
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 64
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.38s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.40s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.39s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.39s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.40s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[64] time=35.18, lr [0.0031375916278190133], train_err=0.006113676
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 65
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.39s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.38s/it]
+ 38%|███▊      | 3/8 [00:13<00:21,  4.39s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.39s/it]
+ 62%|██████▎   | 5/8 [00:21<00:13,  4.39s/it]
+ 75%|███████▌  | 6/8 [00:26<00:08,  4.40s/it]
+ 88%|████████▊ | 7/8 [00:30<00:04,  4.41s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.42s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[65] time=35.24, lr [0.002993695685640663], train_err=0.006206599
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 66
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:30,  4.41s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.41s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.41s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.42s/it]
+ 62%|██████▎   | 5/8 [00:22<00:13,  4.51s/it]
+ 75%|███████▌  | 6/8 [00:27<00:09,  4.79s/it]
+ 88%|████████▊ | 7/8 [00:32<00:04,  4.73s/it]
+100%|██████████| 8/8 [00:37<00:00,  4.76s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[66] time=37.08, lr [0.002851870267601418], train_err=0.006065266
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 67
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:05<00:35,  5.01s/it]
+ 25%|██▌       | 2/8 [00:09<00:28,  4.67s/it]
+ 38%|███▊      | 3/8 [00:13<00:22,  4.55s/it]
+ 50%|█████     | 4/8 [00:16<00:15,  3.76s/it]
+ 62%|██████▎   | 5/8 [00:18<00:09,  3.10s/it]
+ 75%|███████▌  | 6/8 [00:20<00:05,  2.71s/it]
+ 88%|████████▊ | 7/8 [00:22<00:02,  2.46s/it]
+100%|██████████| 8/8 [00:24<00:00,  2.30s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[67] time=24.19, lr [0.002712258179875221], train_err=0.006129033
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 68
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.93s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.94s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.94s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[68] time=15.50, lr [0.0025750000000000013], train_err=0.006176043
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 69
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.94s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.95s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.96s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.95s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.95s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.94s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.94s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[69] time=15.57, lr [0.0024402339353280125], train_err=0.006175432
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 70
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.93s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.93s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.93s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[70] time=15.43, lr [0.002308095683862754], train_err=0.005717105
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 71
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.93s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.96s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.95s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[71] time=15.50, lr [0.00217871829762257], train_err=0.005657474
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 72
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.92s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.93s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.93s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[72] time=15.44, lr [0.002052232048668551], train_err=0.005877065
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 73
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.92s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.92s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:08,  2.02s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.08s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.06s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.05s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.02s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[73] time=16.12, lr [0.0019287642979316155], train_err=0.006004867
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 74
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.97s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.99s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  2.00s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.99s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.99s/it]
+ 75%|███████▌  | 6/8 [00:11<00:04,  2.01s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.99s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.99s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[74] time=15.93, lr [0.0018084393669708396], train_err=0.005863385
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 75
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.96s/it]
+ 25%|██▌       | 2/8 [00:03<00:12,  2.00s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.98s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.98s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.99s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.99s/it]
+ 88%|████████▊ | 7/8 [00:13<00:02,  2.00s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.99s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[75] time=15.90, lr [0.0016913784127921964], train_err=0.005753952
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 76
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.03s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.02s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.00s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.02s/it]
+ 62%|██████▎   | 5/8 [00:10<00:05,  2.00s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.01s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.01s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.00s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[76] time=16.06, lr [0.0015776993058537092], train_err=0.005177497
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 77
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.99s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.99s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.00s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  2.00s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  2.00s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.99s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.98s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.98s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[77] time=15.89, lr [0.0014675165113799027], train_err=0.005455931
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 78
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.03s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.01s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.03s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.04s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.05s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.03s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.02s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.00s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[78] time=16.15, lr [0.0013609409741050145], train_err=0.005368950
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 79
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.03s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.00s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.97s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.95s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.94s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.93s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[79] time=15.56, lr [0.0012580800065610596], train_err=0.005060625
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_79_error@0.005060625
+Starting epoch 80
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.07s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.02s/it]
+ 38%|███▊      | 3/8 [00:06<00:09,  2.00s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.01s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.97s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.95s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.94s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.93s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[80] time=15.72, lr [0.001159037181023203], train_err=0.004940318
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_80_error@0.004940318
+Starting epoch 81
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.95s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.97s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.96s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.97s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.96s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.98s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.98s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[81] time=15.76, lr [0.0010639122252212598], train_err=0.004179109
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_81_error@0.004179109
+Starting epoch 82
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.01s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.98s/it]
+ 38%|███▊      | 3/8 [00:05<00:10,  2.00s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.98s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.98s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.98s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.98s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.99s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[82] time=15.90, lr [0.0009728009219223283], train_err=0.004754275
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 83
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.94s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.02s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.01s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.05s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.03s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.02s/it]
+ 88%|████████▊ | 7/8 [00:14<00:01,  1.99s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.97s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[83] time=15.98, lr [0.0008857950124856526], train_err=0.004002668
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_83_error@0.004002668
+Starting epoch 84
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.99s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.95s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.94s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.95s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.97s/it]
+100%|██████████| 8/8 [00:15<00:00,  1.97s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[84] time=15.65, lr [0.0008029821044868637], train_err=0.003752104
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_84_error@0.003752104
+Starting epoch 85
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:19,  2.74s/it]
+ 25%|██▌       | 2/8 [00:05<00:17,  2.96s/it]
+ 38%|███▊      | 3/8 [00:08<00:15,  3.04s/it]
+ 50%|█████     | 4/8 [00:11<00:11,  2.90s/it]
+ 62%|██████▎   | 5/8 [00:13<00:07,  2.59s/it]
+ 75%|███████▌  | 6/8 [00:15<00:04,  2.40s/it]
+ 88%|████████▊ | 7/8 [00:17<00:02,  2.31s/it]
+100%|██████████| 8/8 [00:19<00:00,  2.21s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[85] time=19.88, lr [0.0007244455835045646], train_err=0.004169645
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 86
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.97s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.94s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.94s/it]
+ 50%|█████     | 4/8 [00:07<00:08,  2.01s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.08s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.08s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.07s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.08s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[86] time=16.39, lr [0.0006502645291581294], train_err=0.003760440
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 87
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.08s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.14s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.14s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.11s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.04s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.04s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.14s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.15s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[87] time=16.93, lr [0.0005805136354812259], train_err=0.003499924
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_87_error@0.003499924
+Starting epoch 88
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:17,  2.45s/it]
+ 25%|██▌       | 2/8 [00:04<00:14,  2.46s/it]
+ 38%|███▊      | 3/8 [00:07<00:12,  2.41s/it]
+ 50%|█████     | 4/8 [00:09<00:09,  2.35s/it]
+ 62%|██████▎   | 5/8 [00:11<00:06,  2.24s/it]
+ 75%|███████▌  | 6/8 [00:13<00:04,  2.16s/it]
+ 88%|████████▊ | 7/8 [00:15<00:02,  2.13s/it]
+100%|██████████| 8/8 [00:17<00:00,  2.11s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[88] time=17.70, lr [0.0005152631357112556], train_err=0.003443740
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_88_error@0.003443740
+Starting epoch 89
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.12s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.09s/it]
+ 38%|███▊      | 3/8 [00:06<00:11,  2.26s/it]
+ 50%|█████     | 4/8 [00:08<00:09,  2.27s/it]
+ 62%|██████▎   | 5/8 [00:11<00:07,  2.38s/it]
+ 75%|███████▌  | 6/8 [00:14<00:04,  2.45s/it]
+ 88%|████████▊ | 7/8 [00:16<00:02,  2.48s/it]
+100%|██████████| 8/8 [00:18<00:00,  2.43s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[89] time=18.97, lr [0.0004545787315704408], train_err=0.003423335
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_89_error@0.003423335
+Starting epoch 90
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.11s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.07s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.04s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.02s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.04s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.01s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.03s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.02s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[90] time=16.26, lr [0.00039852152710975384], train_err=0.003387430
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_90_error@0.003387430
+Starting epoch 91
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.06s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.06s/it]
+ 38%|███▊      | 3/8 [00:06<00:10,  2.06s/it]
+ 50%|█████     | 4/8 [00:08<00:08,  2.03s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.03s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.02s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.03s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.03s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[91] time=16.28, lr [0.00034714796718232063], train_err=0.003233791
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_91_error@0.003233791
+Starting epoch 92
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:18,  2.60s/it]
+ 25%|██▌       | 2/8 [00:05<00:17,  2.85s/it]
+ 38%|███▊      | 3/8 [00:08<00:13,  2.77s/it]
+ 50%|█████     | 4/8 [00:10<00:09,  2.48s/it]
+ 62%|██████▎   | 5/8 [00:12<00:07,  2.39s/it]
+ 75%|███████▌  | 6/8 [00:15<00:04,  2.44s/it]
+ 88%|████████▊ | 7/8 [00:18<00:02,  2.87s/it]
+100%|██████████| 8/8 [00:21<00:00,  2.92s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[92] time=21.87, lr [0.0003005097806082386], train_err=0.003193415
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_92_error@0.003193415
+Starting epoch 93
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:16,  2.40s/it]
+ 25%|██▌       | 2/8 [00:06<00:18,  3.11s/it]
+ 38%|███▊      | 3/8 [00:11<00:20,  4.08s/it]
+ 50%|█████     | 4/8 [00:16<00:17,  4.47s/it]
+ 62%|██████▎   | 5/8 [00:21<00:14,  4.78s/it]
+ 75%|███████▌  | 6/8 [00:26<00:09,  4.67s/it]
+ 88%|████████▊ | 7/8 [00:31<00:04,  4.81s/it]
+100%|██████████| 8/8 [00:35<00:00,  4.80s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[93] time=35.96, lr [0.0002586539280880366], train_err=0.003056360
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_93_error@0.003056360
+Starting epoch 94
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:05<00:35,  5.10s/it]
+ 25%|██▌       | 2/8 [00:13<00:40,  6.75s/it]
+ 38%|███▊      | 3/8 [00:18<00:30,  6.06s/it]
+ 50%|█████     | 4/8 [00:24<00:24,  6.03s/it]
+ 62%|██████▎   | 5/8 [00:28<00:16,  5.44s/it]
+ 75%|███████▌  | 6/8 [00:32<00:10,  5.08s/it]
+ 88%|████████▊ | 7/8 [00:35<00:04,  4.29s/it]
+100%|██████████| 8/8 [00:37<00:00,  3.53s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[94] time=37.57, lr [0.00022162255491723514], train_err=0.003076174
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+Starting epoch 95
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:01<00:13,  1.91s/it]
+ 25%|██▌       | 2/8 [00:03<00:11,  1.92s/it]
+ 38%|███▊      | 3/8 [00:05<00:09,  1.93s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.93s/it]
+ 62%|██████▎   | 5/8 [00:09<00:05,  1.93s/it]
+ 75%|███████▌  | 6/8 [00:11<00:03,  1.96s/it]
+ 88%|████████▊ | 7/8 [00:13<00:01,  1.99s/it]
+100%|██████████| 8/8 [00:15<00:00,  2.00s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[95] time=15.73, lr [0.00018945294854960182], train_err=0.003027798
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_95_error@0.003027798
+Starting epoch 96
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:14,  2.05s/it]
+ 25%|██▌       | 2/8 [00:04<00:12,  2.02s/it]
+ 38%|███▊      | 3/8 [00:06<00:09,  2.00s/it]
+ 50%|█████     | 4/8 [00:07<00:07,  1.97s/it]
+ 62%|██████▎   | 5/8 [00:10<00:06,  2.01s/it]
+ 75%|███████▌  | 6/8 [00:12<00:04,  2.07s/it]
+ 88%|████████▊ | 7/8 [00:14<00:02,  2.11s/it]
+100%|██████████| 8/8 [00:16<00:00,  2.08s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[96] time=16.42, lr [0.0001621775010518483], train_err=0.003003763
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_96_error@0.003003763
+Starting epoch 97
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:02<00:16,  2.43s/it]
+ 25%|██▌       | 2/8 [00:05<00:16,  2.70s/it]
+ 38%|███▊      | 3/8 [00:07<00:12,  2.54s/it]
+ 50%|█████     | 4/8 [00:09<00:09,  2.40s/it]
+ 62%|██████▎   | 5/8 [00:12<00:07,  2.35s/it]
+ 75%|███████▌  | 6/8 [00:14<00:04,  2.30s/it]
+ 88%|████████▊ | 7/8 [00:16<00:02,  2.29s/it]
+100%|██████████| 8/8 [00:18<00:00,  2.28s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[97] time=18.85, lr [0.00013982367648756306], train_err=0.002963383
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_97_error@0.002963383
+Starting epoch 98
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:34,  4.86s/it]
+ 25%|██▌       | 2/8 [00:09<00:29,  4.84s/it]
+ 38%|███▊      | 3/8 [00:14<00:24,  4.85s/it]
+ 50%|█████     | 4/8 [00:19<00:18,  4.74s/it]
+ 62%|██████▎   | 5/8 [00:23<00:14,  4.71s/it]
+ 75%|███████▌  | 6/8 [00:28<00:09,  4.62s/it]
+ 88%|████████▊ | 7/8 [00:32<00:04,  4.65s/it]
+100%|██████████| 8/8 [00:40<00:00,  5.71s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[98] time=40.92, lr [0.0001224139832632313], train_err=0.002946808
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_98_error@0.002946808
+Starting epoch 99
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:32,  4.67s/it]
+ 25%|██▌       | 2/8 [00:09<00:29,  4.95s/it]
+ 38%|███▊      | 3/8 [00:15<00:26,  5.30s/it]
+ 50%|█████     | 4/8 [00:20<00:20,  5.00s/it]
+ 62%|██████▎   | 5/8 [00:24<00:14,  4.80s/it]
+ 75%|███████▌  | 6/8 [00:29<00:09,  4.87s/it]
+ 88%|████████▊ | 7/8 [00:34<00:05,  5.02s/it]
+100%|██████████| 8/8 [00:39<00:00,  4.86s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[99] time=39.38, lr [0.0001099659514641726], train_err=0.002928430
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_99_error@0.002928430
+Starting epoch 100
+
+  0%|          | 0/8 [00:00<?, ?it/s]
+ 12%|█▎        | 1/8 [00:04<00:31,  4.49s/it]
+ 25%|██▌       | 2/8 [00:08<00:26,  4.35s/it]
+ 38%|███▊      | 3/8 [00:12<00:21,  4.30s/it]
+ 50%|█████     | 4/8 [00:17<00:17,  4.28s/it]
+ 62%|██████▎   | 5/8 [00:21<00:12,  4.27s/it]
+ 75%|███████▌  | 6/8 [00:24<00:07,  3.85s/it]
+ 88%|████████▊ | 7/8 [00:26<00:03,  3.25s/it]
+100%|██████████| 8/8 [00:28<00:00,  2.90s/it]
+                                             
+Processing batch 0
+Processing batch 1
+Processing batch 2
+Processing batch 3
+Processing batch 4
+Processing batch 5
+Processing batch 6
+Processing batch 7
+[100] time=28.69, lr [0.00010249211520323384], train_err=0.002920135
+Saved metrics to ../../exp\20260311_222521_639738\train_metrics\metrics.csv
+[Rank 0]: Saved training state to ../../exp\20260311_222521_639738\weights\model_epoch_100_error@0.002920135

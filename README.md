@@ -255,7 +255,7 @@ python test.py  --config <yaml_file>   # evaluation
 | Config file | Use case | n_modes (H×W) | hidden_ch | n_layers | warm_up | n_epochs | finetune |
 |---|---|---|---|---|---|---|---|
 | **`ukea_finetune.yaml`** ✅ | Fine-tune Futian weights on UKEA | **100 × 140** (fixed) | 32 | 4 | 1 | 100 | **True** |
-| `ukea_scratch.yaml` | Train UKEA from scratch | 12 × 30 | 16 | 2 | 10 | 1000 | False |
+| `ukea_scratch.yaml` | Train UKEA from scratch | 25 × 60 | 32 | 2 | 10 | 1000 | False |
 | `region1_scratch.yaml` | Train Futian / custom from scratch | 40 × 56 | 16 | 2 | 10 | 1000 | False |
 
 > **Note:** The scratch configs use a lightweight architecture to reduce training time. To reproduce the paper's accuracy on region1, set `n_modes_height: 100`, `n_modes_width: 140`, `hidden_channels: 32`, `n_layers: 4` in the YAML.
@@ -342,7 +342,7 @@ Replace `<expr_id>` and `<checkpoint_name>` with the actual folder and file name
 python train.py --config ukea_finetune.yaml 2>&1 | tee train_log.txt
 
 # Windows:
-python run_train.py   # edit run_train.py to pass --config ukea_finetune.yaml
+python run_train.py --config ukea_finetune.yaml
 ```
 
 ### Step 4 — Evaluate
@@ -365,10 +365,10 @@ python test.py --config ukea_finetune.yaml --expr_id <timestamp>
 
 ```yaml
 tfno2d:
-  n_modes_height: 12    # increase up to ~H/2 = 25 for the 50-row UKEA grid
-  n_modes_width:  30    # increase up to ~W/2 = 60 for the 120-col UKEA grid
-  hidden_channels: 16   # increase to 32 for a larger model
-  n_layers: 2           # increase to 4 for a larger model
+  n_modes_height: 25    # increase up to H = 50 for better accuracy
+  n_modes_width:  60    # increase up to W = 120 for better accuracy
+  hidden_channels: 32
+  n_layers: 2           # increase to 4 for better accuracy
 
 opt:
   n_epochs: 1000        # scratch training needs more epochs
@@ -387,7 +387,7 @@ opt:
 python train.py --config ukea_scratch.yaml 2>&1 | tee train_log.txt
 
 # Windows:
-python run_train.py   # edit run_train.py to pass --config ukea_scratch.yaml
+python run_train.py --config ukea_scratch.yaml
 ```
 
 ### Step 3 — Evaluate
@@ -414,10 +414,10 @@ python test.py --config ukea_scratch.yaml --expr_id <timestamp>
 
 ```yaml
 tfno2d:
-  n_modes_height: 40    # default lightweight; increase up to 100 for finer modes
-  n_modes_width:  56    # default lightweight; increase up to 140 for finer modes
-  hidden_channels: 16   # increase to 32 to reproduce paper accuracy
-  n_layers: 2           # increase to 4 to reproduce paper accuracy
+  n_modes_height: 40    # default lightweight; increase up to 100 to reproduce paper accuracy
+  n_modes_width:  56    # default lightweight; increase up to 140 to reproduce paper accuracy
+  hidden_channels: 16   # default lightweight; increase to 32 to reproduce paper accuracy
+  n_layers: 2           # default lightweight; increase to 4 to reproduce paper accuracy
 
 opt:
   n_epochs: 1000
@@ -457,7 +457,7 @@ Then set `train_location: "<your_location>"` in the YAML.
 python train.py --config region1_scratch.yaml 2>&1 | tee train_log.txt
 
 # Windows:
-python run_train.py   # edit run_train.py to pass --config region1_scratch.yaml
+python run_train.py --config region1_scratch.yaml
 ```
 
 ### Step 4 — Evaluate
@@ -544,7 +544,7 @@ One Excel file per location, one row per event, plus an overall mean ± std row.
 # ── Architecture ──────────────────────────────────────────────────────────────
 tfno2d:
   n_modes_height: 100   # [finetune] must equal pretrained value (100)
-                        # [scratch]  set to ~H/4; increase for finer detail
+                        # [scratch]  set to ~H/4; increase for better accuracy
   n_modes_width:  140   # same rule as n_modes_height
   hidden_channels: 32   # reduce to 16 for faster training; 32 for paper accuracy (region1)
   n_layers: 4           # reduce to 2 for faster training; 4 for paper accuracy
@@ -616,7 +616,7 @@ LarNO/
 └── code/urbanflood_larfno/             ← run all scripts from here
     ├── train.py                        ← training entry point
     ├── test.py                         ← evaluation entry point
-    ├── run_train.py                    ← Windows wrapper (UTF-8 log redirect)
+    ├── run_train.py                    ← Windows wrapper: logs to train_log.txt (pass --config like train.py)
     ├── pyproject.toml                  ← package definition
     ├── requirements.txt                ← extra pip dependencies
     │
