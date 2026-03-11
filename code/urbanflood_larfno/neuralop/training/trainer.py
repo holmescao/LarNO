@@ -755,8 +755,8 @@ class Trainer:
         for t in range(0, T, step):
             fig, axes = plt.subplots(1, 2, figsize=(8, 4), dpi=80)
             for ax, img, title in [
-                (axes[0], y_true_h[0, :, :, t], f'Reference  (step {t})'),
-                (axes[1], y_pred_h[0, :, :, t], f'LarNO  (step {t})'),
+                (axes[0], y_true_h[0, :, :, t], f'Reference  ({t} min)'),
+                (axes[1], y_pred_h[0, :, :, t], f'LarNO  ({t} min)'),
             ]:
                 im = ax.imshow(img, cmap=cmap, vmin=vmin, vmax=vmax)
                 ax.set_title(title, fontsize=9)
@@ -776,7 +776,7 @@ class Trainer:
             gif_path = os.path.join(epoch_dir, f'{event_name}_epoch{epoch}.gif')
             frames[0].save(
                 gif_path, save_all=True, append_images=frames[1:],
-                duration=100, loop=0,
+                duration=50, loop=0,
             )
             if self.verbose:
                 print(f"Saved comparison GIF to {gif_path}")

@@ -39,7 +39,7 @@ default: &DEFAULT
     data_channels: 13       # 6 rainfall + 6 cumulative-rainfall + 1 DEM
     n_modes_height: 100     # MUST match region1 pretrained architecture
     n_modes_width: 140      # MUST match region1 pretrained architecture
-    hidden_channels: 32     # MUST match region1 pretrained architecture
+    hidden_channels: 64     # MUST match region1 pretrained architecture
     projection_channel_ratio: 2 # MUST match region1 pretrained architecture
     n_layers: 4 # MUST match region1 pretrained architecture
     domain_padding: None
