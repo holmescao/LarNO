@@ -919,7 +919,7 @@ A: `NaN` pixels in the DEM (buildings, domain boundaries) are replaced with 50 m
 
 **Q: The event GIF is too slow / too fast.**
 
-A: Edit the `duration` parameter in `neuralop/training/trainer.py` → `save_comparison_gif()`. Default is `20` ms per frame (≈ 50 fps). Increase to slow down (e.g., `100` = 10 fps).
+A: Edit the `duration` parameter in `neuralop/training/trainer.py` → `save_comparison_gif()`. Default is `100` ms per frame (= 10 fps). Increase to slow down (e.g., `500` = 2 fps).
 
 **Q: I don't see the images in the README on GitHub.**
 
