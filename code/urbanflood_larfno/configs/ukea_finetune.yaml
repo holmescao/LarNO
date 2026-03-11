@@ -14,15 +14,8 @@ default: &DEFAULT
   #     (100 / 140) so saved weights can be loaded without shape errors.
   #   - hidden_channels MUST match pretrained (32).
   #   - n_layers MUST match pretrained (4).
-  #   - Short schedule: warm_up_iter=0, n_epochs=100.
+  #   - Short schedule: n_epochs=100.
   #   - eval.locations includes ukea_2m_5min for zero-shot super-resolution test.
-  # 
-  # Multi-GPU tip (Linux only):
-  #   8-GPU distributed training reduces MAE by ~50% vs single-GPU for fine-tuning.
-  #   To enable: set distributed.use_distributed=True and data.batch_size=8, then run:
-  #     torchrun --nproc_per_node=8 train.py --config ukea_finetune.yaml
-  #   (For scratch training, multi-GPU gives no accuracy gain over single-GPU.)
-  # ─────────────────────────────────────────────────────────────────────────────
   # ─────────────────────────────────────────────────────────────────────────────
 
   #General

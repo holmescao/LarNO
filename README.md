@@ -345,11 +345,11 @@ python train.py --config ukea_finetune.yaml 2>&1 | tee train_log.txt
 python run_train.py --config ukea_finetune.yaml
 ```
 
-> **Multi-GPU tip (Linux only):** For Scenario A fine-tuning, 8-GPU distributed training reduces MAE by ~50% compared with single-GPU. Set `distributed.use_distributed: True` and `data.batch_size: 8` in `ukea_finetune.yaml`, then launch with:
+> **Multi-GPU tip (Linux only):** Set `distributed.use_distributed: True` and `data.batch_size: <your GPU numbers>` in `ukea_finetune.yaml`, then launch with:
 > ```bash
-> torchrun --nproc_per_node=8 train.py --config ukea_finetune.yaml 2>&1 | tee train_log.txt
+> torchrun --nproc_per_node=<your GPU numbers> train.py --config ukea_finetune.yaml 2>&1 | tee train_log.txt
 > ```
-> This benefit is specific to fine-tuning; for scratch training (Scenarios B & C) single-GPU and multi-GPU accuracy are comparable.
+
 
 ### Step 4 — Evaluate
 
@@ -587,8 +587,6 @@ eval:
 # ── Distributed training ──────────────────────────────────────────────────────
 distributed:
   use_distributed: False  # True + torchrun for multi-GPU (Linux only)
-                          # For fine-tuning (Scenario A): 8-GPU + batch_size=8 cuts MAE by ~50%
-                          # For scratch training (Scenarios B & C): multi-GPU gives no accuracy gain
 ```
 
 ### What are the 13 input channels?
@@ -818,7 +816,7 @@ Monitor progress in a second terminal tab:
 tail -f /root/autodl-tmp/LarNO/code/urbanflood_larfno/train_log.txt
 ```
 
-After training finishes (~1–2 hours for 100 epochs on an RTX 4090), evaluate:
+After training finishes (about 10 minutes for 100 epochs on an RTX 4090), evaluate:
 
 ```bash
 # Replace <timestamp> with the folder name printed at training start:
@@ -859,7 +857,7 @@ zip -r exp_results.zip exp/
 
 ---
 
-> 💡 **Cost estimate**: inference on 12 test events takes ~3 minutes. A full 100-epoch fine-tuning run on an RTX 4090 takes ~1–2 hours ≈ ¥1–6. A 1000-epoch scratch run takes ~10–20 hours. **Remember to shut down the instance when done.**
+> 💡 **Cost estimate**: inference on 12 test events takes ~3 minutes. A full 100-epoch fine-tuning run on an RTX 4090 takes about 10 minutes ≈ ¥2. A 1000-epoch scratch run takes about 100 minutes. **Remember to shut down the instance when done.**
 
 ---
 
