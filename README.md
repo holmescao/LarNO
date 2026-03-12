@@ -25,7 +25,7 @@
 ---
 
 > 🧪 **Want to try LarNO instantly — no installation needed?**
-> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)** to run inference on the Futian flood dataset with pre-trained weights in ~5 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
+> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)** to run inference on the Futian flood dataset with pre-trained weights in ~15 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
 
 ---
 

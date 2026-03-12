@@ -35,6 +35,8 @@ build/
 *.pt
 *.pth
 *.gif
+# Exception: keep the README demo GIF in the repo
+!code/urbanflood_larfno/assets/*.gif
 *.xlsx
 *.log
 train_log.txt
