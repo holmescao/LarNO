@@ -30,10 +30,10 @@ BENCHMARK_ROOT = "../benchmark/urbanflood"   # relative to this script
 DATASET_CARD   = "dataset_card.md"
 
 # Which sub-datasets to upload
-UPLOAD_GEODATA       = True
-UPLOAD_UKEA_8M       = True   # training resolution (20 events)
-UPLOAD_UKEA_2M       = True   # zero-shot super-res test (20 events)
-UPLOAD_REGION1_20M   = True   # Futian large dataset (80 events)
+UPLOAD_GEODATA       = False
+UPLOAD_UKEA_8M       = False   # training resolution (20 events)
+UPLOAD_UKEA_2M       = False   # zero-shot super-res test (20 events)
+UPLOAD_REGION1_20M   = False   # Futian large dataset (80 events)
 
 # ── Create repo ───────────────────────────────────────────────────────────────
 api = HfApi()

@@ -7,6 +7,15 @@ Manuscript.pdf
 开源推进.md
 正在执行的策略.md
 
+# ── HuggingFace upload scripts (internal tooling, not for repo) ──────────────
+huggingface/
+
+# ── PDF extraction artifacts ──────────────────────────────────────────────────
+extract_pdf.py
+extract_pdf2.py
+pdf_extracted.txt
+pdf_all_pages.txt
+
 # ── Large data & outputs (download separately) ──────────────────────────────
 benchmark/
 exp/

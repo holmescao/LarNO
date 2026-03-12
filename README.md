@@ -5,7 +5,7 @@
   <a href="https://github.com/holmescao/LarNO"><img src="https://img.shields.io/github/stars/holmescao/LarNO?style=social" alt="GitHub Stars"></a>
   <a href="https://huggingface.co/datasets/holmescao/LarNO-dataset"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
   <a href="https://huggingface.co/holmescao/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-LarNO-yellow" alt="HuggingFace Model"></a>
-  <a href="https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+  <a href="https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 </p>
 
 ---
@@ -20,6 +20,7 @@
 > **[Journal of Hydrology]** &nbsp;|&nbsp;
 > [Paper](#citation) &nbsp;|&nbsp;
 > [Dataset](https://holmescao.github.io/datasets/LarNO) &nbsp;|&nbsp;
+> [Pre-trained Weights (HuggingFace)](https://huggingface.co/holmescao/LarNO) &nbsp;|&nbsp;
 > [Pre-trained Weights (Google Drive)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) &nbsp;|&nbsp;
 > [Pre-trained Weights (Baidu Cloud, code: `LaNO`)](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) &nbsp;|&nbsp;
 > [Community Discussions](https://github.com/holmescao/LarNO/discussions)
@@ -27,7 +28,7 @@
 ---
 
 > 🧪 **Want to try LarNO instantly — no installation needed?**
-> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)** to run inference on the Futian flood dataset with pre-trained weights in ~15 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
+> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)** to run inference on the Futian flood dataset with pre-trained weights in ~15 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
 
 ---
 
@@ -40,7 +41,8 @@
 ---
 
 ## News
-- **[12/03/2026]** Interactive demo released — run LarNO inference in your browser with **[Google Colab](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)**, no installation needed.
+- **[12/03/2026]** Pre-trained weights and benchmark dataset published on **[HuggingFace](https://huggingface.co/holmescao/LarNO)** — download without Google Drive or Baidu Cloud.
+- **[12/03/2026]** Interactive demo released — run LarNO inference in your browser with **[Google Colab](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)**, no installation needed.
 - **[02/03/2026]** Full end-to-end reproduction tutorial released — train and test LarNO with **a single GPU on [AutoDL](https://www.autodl.com/)**.
 - **[02/03/2026]** Code released on **[GitHub](https://github.com/holmescao/LarNO)** and benchmark **[dataset](https://holmescao.github.io/datasets/LarNO)** publicly released.
 
@@ -189,9 +191,10 @@ LarNO is evaluated on two benchmark datasets. **We recommend starting with the s
 
 ### Download links
 
-| Dataset | Official Page |
+| Dataset | Link |
 |---|---|
-| UKEA & Futian | [https://holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
+| UKEA & Futian (HuggingFace) | [holmescao/LarNO-dataset](https://huggingface.co/datasets/holmescao/LarNO-dataset) |
+| UKEA & Futian (Official Page) | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
 
 📁 Unzip and place data so the directory tree looks like:
 
@@ -229,8 +232,8 @@ Edit the plain text files in `configs/` to control train/test splits:
 
 ```
 configs/
-├── ukea_train.txt      ← 16 UKEA training events
-├── ukea_test.txt       ← 4 UKEA test events
+├── ukea_train.txt      ← 8 UKEA training events
+├── ukea_test.txt       ← 12 UKEA test events
 ├── region1_fulltrain.txt   ← 64 Futian training events
 ├── region1_smalltrain.txt   ← 16 Futian training events
 └── region1_test.txt    ← 16 Futian test events
@@ -260,6 +263,7 @@ The checkpoint uses the following architecture. Any config that loads it **must 
 
 | Mirror | Link |
 |---|---|
+| HuggingFace | [holmescao/LarNO](https://huggingface.co/holmescao/LarNO) |
 | Google Drive | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
 | Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) |
 

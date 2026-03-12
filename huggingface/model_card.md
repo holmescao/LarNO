@@ -19,7 +19,7 @@ pipeline_tag: time-series-prediction
 **Paper:** Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO
 **Journal:** Journal of Hydrology (Under Review)
 **GitHub:** [holmescao/LarNO](https://github.com/holmescao/LarNO)
-**Colab Demo:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)
+**Colab Demo:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)
 
 ---
 
@@ -74,7 +74,7 @@ Benchmarked on Futian district, Shenzhen (~100 km²) — 5 m resolution, zero-sh
 
 ### Quick inference (no local setup)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)
 
 ### Local inference
 
