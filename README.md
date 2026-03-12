@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://www.sciencedirect.com/journal/journal-of-hydrology"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Under%20Review-blue" alt="Journal of Hydrology"></a>
   <a href="https://github.com/holmescao/LarNO"><img src="https://img.shields.io/github/stars/holmescao/LarNO?style=social" alt="GitHub Stars"></a>
-  <a href="https://huggingface.co/datasets/holmescao/LarNO-dataset"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
+  <a href="https://holmescao.github.io/datasets/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
   <a href="https://huggingface.co/holmescao/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-LarNO-yellow" alt="HuggingFace Model"></a>
   <a href="https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 </p>
@@ -193,8 +193,7 @@ LarNO is evaluated on two benchmark datasets. **We recommend starting with the s
 
 | Dataset | Link |
 |---|---|
-| UKEA & Futian (HuggingFace) | [holmescao/LarNO-dataset](https://huggingface.co/datasets/holmescao/LarNO-dataset) |
-| UKEA & Futian (Official Page) | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
+| UKEA & Futian | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
 
 📁 Unzip and place data so the directory tree looks like:
 
