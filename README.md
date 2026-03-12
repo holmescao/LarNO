@@ -3,7 +3,8 @@
 <p align="center">
   <a href="https://www.sciencedirect.com/journal/journal-of-hydrology"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Under%20Review-blue" alt="Journal of Hydrology"></a>
   <a href="https://github.com/holmescao/LarNO"><img src="https://img.shields.io/github/stars/holmescao/LarNO?style=social" alt="GitHub Stars"></a>
-  <a href="https://holmescao.github.io/datasets/LarNO"><img src="https://img.shields.io/badge/Dataset-LarNO-orange" alt="Dataset"></a>
+  <a href="https://huggingface.co/datasets/holmescao/LarNO-dataset"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
+  <a href="https://huggingface.co/holmescao/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-LarNO-yellow" alt="HuggingFace Model"></a>
   <a href="https://colab.research.google.com/drive/1OTrdGqNNgFGZj91grGKMFwMspwSUiGcS"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 </p>
 
@@ -20,7 +21,8 @@
 > [Paper](#citation) &nbsp;|&nbsp;
 > [Dataset](https://holmescao.github.io/datasets/LarNO) &nbsp;|&nbsp;
 > [Pre-trained Weights (Google Drive)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) &nbsp;|&nbsp;
-> [Pre-trained Weights (Baidu Cloud, code: `LaNO`)](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO)
+> [Pre-trained Weights (Baidu Cloud, code: `LaNO`)](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) &nbsp;|&nbsp;
+> [Community Discussions](https://github.com/holmescao/LarNO/discussions)
 
 ---
 
@@ -65,6 +67,23 @@
 
 > *In urban areas, real-time early warning systems are used to mitigate the severe impacts of pluvial flooding. Although such systems have witnessed much recent development through the use of deep learning methods, urban-scale high-resolution modeling remains fundamentally constrained by the massive GPU memory demand for training neural networks. To overcome this bottleneck, we present LarNO, a memory-efficient, discretization-invariant neural operator that learns continuous-space hydrodynamic mappings to predict the spatiotemporal distributions of water depth based on dynamic rainfall and static topographic and drainage conditions. This approach enables zero-shot generalization to high resolution when trained solely on low-resolution data. Additionally, existing autoregressive neural operators compress complex dynamics into a single physical variable, leading to an information bottleneck in modeling complex nonlinear spatiotemporal dependencies. To resolve this, we embed spatiotemporal feature extractors into a neural operator to implement latent autoregression. Theoretically, we prove that our approach universally approximates continuous operators and enables zero-shot super-resolution generalization. An empirical case study of a highly urbanized region spanning nearly 100 km$^2$ in Shenzhen, China, subjected to observed rainfall events with spatiotemporal heterogeneity, demonstrates that LarNO achieves large-scale, high-resolution (5 m, 5 min), long-duration (6 h) urban flood real-time spatiotemporal forecasting to mm-level depth accuracy, reducing errors by more than half compared to state-of-the-art neural operators, while delivering two orders of magnitude faster inference speedup over a traditional hydrodynamic model. Besides, results from the ablation study validate the effectiveness of latent autoregression. Moreover, LarNO supports few-shot transfer to unseen catchments via fine-tuning. Furthermore, comprehensive parameter sensitivity analyses demonstrate the robustness and effectiveness of LarNO. Our work provides a groundbreaking framework for real-time early warning and refined management of large-scale urban flood events.*
 
+
+---
+
+## Performance
+
+Comparison on the Futian district (~100 km², Shenzhen) benchmark — **5 m resolution, zero-shot super-resolution** (trained at 20 m, tested at 5 m). Results from Table 1 of the paper.
+
+| Method | Params | Inference† | Speedup vs MIKE+ | MAE (m) ↓ | CSI ↑ |
+|---|---|---|---|---|---|
+| MIKE+ (hydraulic solver) | — | ~8.9 h | 1× | Reference | Reference |
+| UNO | 109.1 M | 710 s | ~570× | 0.024 ± 0.007 | 0.343 ± 0.026 |
+| FNO | 29.1 M | 760 s | ~530× | 0.019 ± 0.004 | 0.620 ± 0.027 |
+| **LarNO (ours)** | **29.1 M** | **34 s** ‡ | **~940×** | **0.008 ± 0.003** | **0.722 ± 0.016** |
+
+> † Inference time for a single 6-hour flood event on NVIDIA RTX 4090.
+> ‡ LarNO inference uses **TensorRT (TRT)** acceleration; UNO and FNO do not support TRT.
+> **Note:** The released dataset is a **20 m downsampled version** for accessibility. Metrics on the released 20 m data will differ from the 5 m paper results above.
 
 ---
 
@@ -156,8 +175,8 @@ LarNO is evaluated on two benchmark datasets. **We recommend starting with the s
 | Grid (train) | 50 × 120 at **8 m** resolution |
 | Grid (test) | 200 × 480 at **2 m** resolution (zero-shot super-resolution) |
 | Zero-shot super-resolution | **8 m → 2 m** (4× finer, no retraining) |
-| Training events | 16 |
-| Test events | 4 |
+| Training events | 8 |
+| Test events | 12 |
 
 ### Futian large case (`region1_20m`) — for further research 🔬
 
@@ -653,8 +672,8 @@ LarNO/
     │   ├── ukea_finetune.yaml          ← Scenario A: fine-tune UKEA (default)
     │   ├── ukea_scratch.yaml           ← Scenario B: train UKEA from scratch
     │   ├── region1_scratch.yaml        ← Scenario C: train Futian / custom
-    │   ├── ukea_train.txt              ← UKEA training events (16 events)
-    │   ├── ukea_test.txt               ← UKEA test events (4 events)
+    │   ├── ukea_train.txt              ← UKEA training events (8 events)
+    │   ├── ukea_test.txt               ← UKEA test events (12 events)
     │   ├── region1_fulltrain.txt       ← Futian training events (64 events)
     │   ├── region1_smalltrain.txt      ← Futian training events subset (16 events)
     │   └── region1_test.txt            ← Futian test events (16 events)

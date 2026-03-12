@@ -1,0 +1,2363 @@
+Total pages: 40
+
+=== Page 1 ===
+Large-scale urban flood modeling and zero-shot high-resolution
+1
+generalization with LarNO
+2
+Xiaoyan Cao1, Yao Yao2*, Zhi Wang1,3,4, Zhangxinyue Zhao1, Alistair G.L. Borthwick5,6,
+3
+Huapeng Qin1*
+4
+1 Eco-environment and Resource Efficiency Research Laboratory, School of Environment and
+5
+Energy, Peking University Shenzhen Graduate School, Shenzhen, 518055, P. R. China.
+6
+2Tsinghua-Berkeley Shenzhen Institute, Tsinghua University, Shenzhen, 518055, P. R. China.
+7
+3Tsinghua Shenzhen International Graduate School, Tsinghua University, Shenzhen, 518055, P.
+8
+R. China.
+9
+4School of Environmental Science and Engineering, Southern University of Science and
+10
+Technology, Shenzhen, 518055, P. R. China.
+11
+5School of Engineering, The University of Edinburgh, Edinburgh, EH9 3JL, United Kingdom.
+12
+6School of Engineering, Computing and Mathematics, University of Plymouth, Plymouth, PL4
+13
+8AA, United Kingdom.
+14
+*Corresponding author(s). E-mail(s): yaoyao.2016@tsinghua.org.cn; qinhp@pku.edu.cn
+15
+Abstract
+16
+In urban areas, real-time early warning systems are used to mitigate the severe impacts of pluvial
+17
+flooding. Although such systems have witnessed much recent development through the use of deep learn-
+18
+ing methods, urban-scale high-resolution modeling remains fundamentally constrained by the massive
+19
+GPU memory demand for training neural networks. To overcome this bottleneck, we present LarNO, a
+20
+memory-efficient, discretization-invariant neural operator that learns continuous-space hydrodynamic
+21
+mappings to predict the spatiotemporal distributions of water depth based on dynamic rainfall and
+22
+static topographic and drainage conditions. This approach enables zero-shot generalization to high
+23
+resolution when trained solely on low-resolution data. Additionally, existing autoregressive neural oper-
+24
+ators compress complex dynamics into a single physical variable, leading to an information bottleneck
+25
+in modeling complex nonlinear spatiotemporal dependencies. To resolve this, we embed spatiotem-
+26
+poral feature extractors into a neural operator to implement latent autoregression. Theoretically, we
+27
+prove that our approach universally approximates continuous operators and enables zero-shot super-
+28
+resolution generalization. An empirical case study of a highly urbanized region spanning nearly 100 km2
+29
+in Shenzhen, China, subjected to observed rainfall events with spatiotemporal heterogeneity, demon-
+30
+strates that LarNO achieves large-scale, high-resolution (5 m, 5 min), long-duration (6 h) urban flood
+31
+real-time spatiotemporal forecasting to mm-level depth accuracy, reducing errors by more than half
+32
+compared to state-of-the-art neural operators, while delivering two orders of magnitude faster inference
+33
+speedup over a traditional hydrodynamic model. Besides, results from the ablation study validate the
+34
+effectiveness of latent autoregression. Moreover, LarNO supports few-shot transfer to unseen catch-
+35
+ments via fine-tuning. Furthermore, comprehensive parameter sensitivity analyses demonstrate the
+36
+1
+
+
+=== Page 2 ===
+robustness and effectiveness of LarNO. Our work provides a groundbreaking framework for real-time
+37
+early warning and refined management of large-scale urban flood events.
+38
+Keywords: Urban flood; Spatiotemporal forecasting; Large scale; Memory efficiency; Neural operator; Transfer
+39
+learning;
+40
+1 Introduction
+41
+Floods are natural disasters that occur with high frequency worldwide and can reach very large magnitudes.
+42
+During the first quarter of the 21st century, flood disasters have affected several billion people and caused over a
+43
+trillion dollars in economic losses (Centre for Research on the Epidemiology of Disasters, 2020; Liu et al., 2024).
+44
+Intensification of climate change-induced extreme rainfall (Prein et al., 2017) and the expansion of impervious
+45
+surface cover through rapid urbanization (United Nations and Social Affairs, 2018; Rentschler et al., 2023) have
+46
+significantly increased human exposure to flood risk. Alongside structural interventions such as multistage flood
+47
+control channels (Mananoma et al., 2025) and nature-based water infrastructure (Supratman et al., 2025), real-
+48
+time flood early warning systems are well-established as critical non-structural tools for mitigating economic
+49
+losses (Pilon, 2004; Rogers and Tsirkunov, 2010) and saving lives (World Meteorological Organization, 2013; World
+50
+Health Organization, 2014). In highly urbanized catchments, the complex micro-terrain (Logan and Reilly, 2023),
+51
+high density of buildings (Bates, 2023), and intricate drainage system (Cao et al., 2025) result in strongly localized
+52
+flood dynamics, whose simulation requires the use of flood models of high spatial resolution of O(m) (Cao et al.,
+53
+2025). At the urban scale, flood models also require high temporal resolution of O(min) to adequately simulate
+54
+rapid inundation processes driven by extreme rainfall events with spatiotemporal heterogeneity (Zhang et al.,
+55
+2023). Hence, a model for large-scale, high-resolution spatiotemporal forecasting of urban flooding is urgently
+56
+needed to advance flood early warning systems and refine management decisions.
+57
+Traditional hydrodynamic models, such as SWMM (Huber et al., 1988), LISFLOOD-FP (Bates and De Roo,
+58
+2000), MIKE (Patro et al., 2009), and InfoWorks ICM (Cheng et al., 2017) provide accurate simulations of urban
+59
+flood dynamic processes. However, high-resolution numerical simulations (Chippada et al., 1998) are computa-
+60
+tionally intensive, requiring several hours to run on large-scale spatiotemporal domains due to convergence and
+61
+stability requirements, such as spatial and temporal resolutions of 5 m and 0.2 s, when solving the governing
+62
+shallow water equations (De Moura and Kubrusly, 2013). Despite advances in high-performance computing (Neal
+63
+et al., 2009; Sanders and Schubert, 2019; Schubert et al., 2022) and acceleration by graphics processing units
+64
+(GPU) (Gong et al., 2020; Ming et al., 2020; Buttinger-Kreuzhuber et al., 2022; Li et al., 2022), traditional
+65
+hydrodynamic models still struggle to provide real-time urban flood spatiotemporal forecasts.
+66
+In recent years, deep learning methods have been increasingly applied to the spatiotemporal forecasting of
+67
+urban floods. Such methods learn underlying physical laws in an end-to-end data-driven manner (LeCun et al.,
+68
+2015), supporting large time steps (e.g., 5 min) at high spatial resolution and achieving computational speeds 2-3
+69
+orders of magnitude faster than traditional hydrodynamic models (Cao et al., 2025). The mainstream deep learning
+70
+2
+
+
+=== Page 3 ===
+architecture for urban flood spatiotemporal modeling involves coupling spatial networks (e.g., convolutional neural
+71
+networks, CNNs) with temporal networks (e.g., long short-term memory networks, LSTMs) to capture local
+72
+spatial features such as terrain and drainage system, while also modeling the temporal dependencies of flood
+73
+dynamics (Bentivoglio et al., 2023; Burrichter et al., 2023; He et al., 2023; Situ et al., 2024; Berkhahn and
+74
+Neuweiler, 2024; Nearing et al., 2024; Cao et al., 2025; Rau et al., 2025; Woo et al., 2025). However, large-scale,
+75
+high-resolution spatiotemporal modeling, involving millions of spatial mesh cells and sub-billions of spatiotemporal
+76
+points, demands a massive memory requirement (i.e., GPU memory) for neural network training that greatly
+77
+exceeds the GPU memory limit (Cao et al., 2025). Existing studies compromise by either using low spatial
+78
+resolution (e.g., 30 m (Rau et al., 2025)) and low temporal resolution (e.g., 60 min (Woo et al., 2025)), or limiting
+79
+the study to small areas (e.g., 1 km2) (Cao et al., 2025)), as shown in Fig. 1. Hence, large-scale, high-resolution
+80
+spatiotemporal modeling of urban floods is a bottleneck for deep learning methods.
+81
+Fig. 1: Review of spatial and temporal resolutions, study areas, and spatiotemporal points used in
+existing urban flood forecasting studies. Circle size represents the area of the study region, and its color
+indicates the spatiotemporal points. The yellow-shaded area marks the size of the high spatiotemporal resolution
+region. The red circle highlights our work. Studies without specific values for these parameters are excluded from
+the analysis. The numbers refer to literature listed in Extended Table 2.
+This limitation arises because such deep learning methods are essentially discretization-dependent operators
+82
+that learn mesh mappings at a fixed resolution (Li et al., 2020). As a consequence, such methods are unable
+83
+to generalize to higher resolutions without training on high-resolution data (He et al., 2023). By contrast, neu-
+84
+ral operators are discretization-invariant neural networks that map inputs to solutions of partial differential
+85
+equations (PDEs) in continuous space (Kovachki et al., 2023). The discretization-invariant property enables neu-
+86
+ral operators to be trained on low-resolution data and then directly generalized to higher resolutions (zero-shot
+87
+3
+
+
+=== Page 4 ===
+super-resolution generalization) (Kovachki et al., 2023). Unlike conventional train–test settings where the reso-
+88
+lution must match, zero-shot super-resolution enables memory-efficient training. Although neural operators have
+89
+been applied to approximate flood dynamics (Xu et al., 2024, 2025), urban-scale high-resolution spatiotemporal
+90
+forecasting remains unexplored. Moreover, existing neural operators (Li et al., 2021; Rahman et al., 2022) face a
+91
+core challenge in spatiotemporal modeling. By employing an explicit autoregressive scheme (Gregor et al., 2014),
+92
+where predicted physical states are fed back into the model for step-by-step forecasting, the network is forced
+93
+to continuously compress complex system dynamics into a single physical variable. This information bottleneck
+94
+not only restricts the modeling of complex nonlinear spatiotemporal dependencies but also directly propagates
+95
+prediction errors, leading to rapid error compounding over long forecast horizons.
+96
+Here, we propose a novel neural operator, LarNO (pronounced “Lar-no”), that enables zero-shot generalization
+97
+to high resolutions, thereby achieving memory-efficient training for urban flood dynamics. LarNO is a latent
+98
+autoregressive neural operator that embeds spatiotemporal feature extractors for modeling complex nonlinear
+99
+spatiotemporal dependencies. We theoretically prove that LarNO has universal approximation capabilities for
+100
+continuous operators (such as the hydrodynamic operator) (Theorem 1), and enables zero-shot super-resolution
+101
+generalization (Theorem 2). To the best of our knowledge, LarNO is the first method to achieve modeling of
+102
+millions of spatial mesh cells and sub-billions of spatiotemporal points, surpassing existing studies by one order
+103
+of magnitude. This breakthrough overcomes the bottleneck in large-scale (≈100 km2), high-resolution (5 m, 5
+104
+min), long-duration (6 h) spatiotemporal forecasting of urban floods. Additionally, LarNO achieves mm-level
+105
+depth accuracy by using hydrodynamic simulation results as a reference and reduces errors by more than half
+106
+compared with existing neural operators, accompanied by a ∼940× acceleration in inference speed compared to
+107
+the reference hydrodynamic model. Furthermore, we demonstrate that few-shot fine-tuning effectively transfers
+108
+LarNO to a new catchment.
+109
+The remainder of the paper is structured as follows. Section 2 outlines the methodology behind LarNO.
+110
+Section 3 provides a theoretical analysis of LarNO. Section 4 presents validation results for a flood in Shenzhen,
+111
+China. Section 5 examines the advantages and limitations of the model and suggests future work. The main
+112
+findings from the study are summarized in Section 6. Appendix ??-C reviews urban flooding spatiotemporal
+113
+forecasting studies and existing neural operator architectures, and presents a theoretical proof of LarNO.
+114
+2 Methodology
+115
+2.1 Governing equations and hydrodynamic operator for urban flood dynamics
+116
+The spatiotemporal evolution of an urban flood can be modeled as a complex hydrodynamic system that couples
+117
+the 1D Saint-Venant equations (SVE) for the drainage system with the 2D shallow water equations (SWE) for
+118
+surface flow (Bates et al., 2010). The evolution process can be described as a continuous, nonlinear mapping in a
+119
+function space, where the input space includes source/sink terms, boundary conditions, and historical hydrody-
+120
+namic states, and the output space represents the hydrodynamic function. Therefore, the system can be generally
+121
+4
+
+
+=== Page 5 ===
+represented by the following governing equation:
+122
+(Qau)(x) = 0,
+x ∈D,
+u(x) = f(x),
+x ∈∂D.
+(1)
+where Qa is a nonlinear continuous operator that governs the hydrodynamic system through PDEs, which depend
+123
+on a ∈A, with A representing input space. Here, u : D →R is the solution function (e.g., water depth), x is a
+124
+point in the domain D, and f is the boundary condition on the boundary ∂D.
+125
+Let D ⊂Rd be a bounded domain, and the input space A = A(D; Rdin) and output space U = U(D; Rdout)
+126
+be separable Banach spaces, meaning they contain a countable subset that can approximate all other elements
+127
+in the space, with values in Rdin and Rdout. The nonlinear discretization operator Gϕ, parameterized by ϕ ∈Φ,
+128
+serves as an approximation to the solution of the PDEs (the inverse function of Qa):
+129
+Gϕ := Q−1
+a
+: A →U,
+(2)
+mapping the input a to the solution space, such that ut = Gϕ(at).
+130
+For numerical solutions, time-stepping methods such as Euler’s method are used (Hanert et al., 2005). The
+131
+solution at each time step is updated by means of a differential operator Dϕ as follows:
+132
+ut = Gϕ(at, ut−1) = ut−1 + ∆tDϕ(at, ut−1),
+t = 1, . . . , Nϕ,
+(3)
+with temporal resolution ∆t chosen small enough to satisfy the Courant-Friedrichs-Lewy (CFL) condition for
+133
+numerical stability (De Moura and Kubrusly, 2013).
+134
+Next, we introduce neural operators Gθ that directly predict the solution ˆut by learning continuous mappings
+135
+between the input and output spaces, thereby bypassing the CFL condition and enabling a large time step (e.g.,
+136
+5 min) to be used for fast simulation of urban flood dynamics.
+137
+2.2 Memory-efficient neural operator training for urban flood forecasting
+138
+Neural operators learn the mapping between two infinite-dimensional continuous spaces based on a finite collection
+139
+of input-output pairs (Li et al., 2021). Given observational data {aj, uj}N
+j=1, where aj are samples drawn from a
+140
+probability measure µ supported on A, and uj = Gϕ(aj), the objective is to learn a neural operator,
+141
+Gθ : A →U,
+θ ∈Θ,
+(4)
+to approximate the hydrodynamic operator Gϕ, where Θ is a space of finite-dimensional parameters. By choosing
+142
+θ† ∈Θ, so that Gθ† ≈Gϕ, this is framed as a natural framework in the infinite-dimensional learning space, where
+143
+we can define a cost function C : U × U →R to quantify the difference between outputs of the neural network
+144
+5
+
+
+=== Page 6 ===
+Fig. 2: Memory-efficient neural operator training and zero-shot generalization to high resolutions
+for urban flood spatiotemporal forecasting. a, Overview of the memory-efficient training process for map-
+pings between continuous function spaces using a neural operator. A learnable neural operator is trained at low
+resolution, and zero-shot generalization is achieved by directly applying the operator at a higher resolution. b,
+Training stage of the neural operator, where discretized inputs such as rainfall, terrain, and drain inlet are pro-
+vided, and the output is supervised by a numerical operator (e.g., MIKE Plus). c, Application of the neural
+operator learned in b to zero-shot generalization at higher spatial resolutions.
+and ground-truth solutions, and thus seek the minimum of the following problem:
+145
+min
+θ∈Θ Ea∼µ [C(Gθ(a), Gϕ(a))] .
+(5)
+As shown in Fig. 2, the neural operators Gθ first learn the continuous mapping between the low-resolution input
+146
+and reference solution generated by the hydrodynamic operator Gϕ, and then perform zero-shot super-resolution
+147
+generalization at higher resolutions. Unlike classical deep learning methods that are trained and inferred at the
+148
+same resolution, neural operators offer memory-efficient training, and hence overcome the bottleneck of massive
+149
+GPU memory requirements during training for large-scale, high-resolution urban flood spatiotemporal modeling.
+150
+2.3 Neural operator architecture
+151
+Neural operators learn mappings through an iterative process, v0 →v1 →· · · →vN, using multi-step neural
+152
+networks, where vi is the output of the i-th layer, vi ∈Rdvi, and dvi is the dimension. The architecture is
+153
+6
+
+
+=== Page 7 ===
+formulated as:
+154
+Gθ = P ◦
+ N
+Y
+i=1
+vi
+!
+◦L,
+vi = σ(Wi + Ki + Bi),
+(6)
+which involves three steps: lifting, iterative kernel integration, and projection. (1) In the lifting step, the input
+155
+a ∈A is first lifted to a higher-dimensional hidden state v0 = L(a) by a lifting operator L, typically parameterized
+156
+by a shallow, fully-connected neural network; (2) Next, the representation is iteratively updated through multiple
+157
+neural network layers; each layer from vi →vi+1 involves a linear operator Wi, kernel integration operator Ki,
+158
+bias function Bi, and nonlinear activation function σ; (3) In the projection step, the final output is obtained by
+159
+projecting the hidden state vN via a projection operator P, using a shallow, fully-connected neural network.
+160
+Typically, the integral kernel operator Ki is computed using the fast Fourier transform (FFT) and a linear
+161
+operator Ri for efficient parameterization of the kernel:
+162
+(K(a; θK)v) (x) = F−1 (R · (Fv)) (x)
+∀x ∈D,
+(7)
+where the index i is omitted for simplicity, F denotes the Fourier transform, F−1 its inverse, and θK represents the
+163
+parameters of K. To parameterize K, the Fourier series expansion is applied in discrete Fourier transform mode.
+164
+The series is truncated at the maximum mode kmax, and the linear operator R is parameterized as a complex-
+165
+valued (kmax × dv × dv)-tensor containing the truncated Fourier coefficients. Multiplication of the learned weight
+166
+tensor R with the Fourier-transformed input Fv is then expressed as:
+167
+(R · (Fv))k,l =
+dv
+X
+j=1
+Rk,l,j (Fv)k,j ,
+k = 1, . . . , kmax,
+l = 1, . . . , dv.
+(8)
+where dv denotes the dimension of the hidden state v. See Appendix B for a more detailed description of the
+168
+neural operator.
+169
+It is worth noting that the existing neural operator architecture relies on an autoregressive scheme for spa-
+170
+tiotemporal forecasting. Such a scheme uses historical physical states ˆu<t for single-step forecasting (ˆut =
+171
+Gθ(a≤t, ˆu<t)), and so lacks the ability to model complex nonlinear temporal and spatial dependencies between
+172
+states at different time steps.
+173
+2.4 Latent autoregressive neural operator for modeling complex nonlinear
+174
+spatiotemporal interdependencies
+175
+We propose LarNO to model complex nonlinear spatiotemporal interdependencies and temporal dependencies
+176
+(Fig. 3). LarNO embeds a spatiotemporal feature extractor T i in each of the N layers {vi}N
+i=1 to control the
+177
+flow of spatiotemporal information via the preceding hidden state vi
+t−1 in the latent space for step-by-step fore-
+178
+casting (ˆut = Gθ(a≤t, vi
+t−1)), a process called latent autoregression. Unlike conventional explicit autoregression
+179
+7
+
+
+=== Page 8 ===
+in the physical space, which is highly prone to rapid error accumulation by directly re-ingesting physical pre-
+180
+dictions, latent autoregression propagates high-dimensional hidden states to maintain complex spatiotemporal
+181
+dependencies, thereby naturally mitigating error compounding. The overall architecture of LarNO is as follows:
+182
+Gθ = P ◦
+ N
+Y
+i=1
+σ((Wi + Ki) ◦T i + Bi)
+
+◦L.
+(9)
+To capture local spatial effects, we reshape the hidden state vi
+t−1 into a three-dimensional tensor and embed a
+183
+shared convolutional gated recurrent unit (ConvGRU) operator (Cao et al., 2025) as the spatiotemporal feature
+184
+extractor T i. To satisfy the strict memory constraints of large-scale, high-resolution modeling, this architecture is
+185
+designed for structural efficiency. First, compared to alternative recurrent architectures such as ConvLSTM (Shi
+186
+et al., 2015), ConvGRU requires fewer trainable parameters and lower memory overhead while maintaining com-
+187
+parable predictive accuracy (Chung et al., 2014). Second, the ConvGRU parameters are shared across all layers
+188
+to further prevent parameter explosion. Concurrently, this sharing enforces consistent localized physical state
+189
+transition rules across different levels of feature extraction.
+190
+At each layer, LarNO first updates the dynamic hidden state ´vi
+t using T i. This update combines information
+191
+from the preceding hidden state vi
+t−1 and the current input state vi−1
+t
+from the previous layer. After updating
+192
+the dynamic hidden state ´vi
+t, LarNO applies a linear operator Wi, kernel integration operator Ki, bias function
+193
+Bi, and nonlinear activation function σ to obtain the final representation vi
+t for the layer. Notably, to facilitate
+194
+efficient engineering deployment and bypass the limited support for complex-number operations in distributed
+195
+hardware frameworks, we discard the imaginary part during the frequency domain transformation and retain only
+196
+the real part. The key equations of the i-th LarNO layer at time t are as follows:
+197
+vi
+t = σ
+ 
+Wi ∗´vi
+t + F−1
+Ri · (F ´vi
+t )
+
++ Bi
+!
+,
+(10)
+198
+T i
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ri
+t = σ
+
+Wi
+r ∗[vi−1
+t
+, vi
+t−1] + Bi
+r
+
+,
+zi
+t = σ
+
+Wi
+z ∗[vi−1
+t
+, vi
+t−1] + Bi
+z
+
+,
+evi
+t = tanh
+
+Wi
+evi ∗[vi−1
+t
+, rt ⊙vi
+t−1] + Bi
+evi
+
+,
+´vi
+t = zi
+t ⊙vi
+t−1 + (1 −zi
+t) ⊙evi
+t,
+(11)
+where ri
+t and zi
+t are reset and update gates that control the flow of flood-related spatiotemporal information from
+199
+the preceding to the current time step, evi
+t is the candidate hidden state, and the primes refer to the dynamic
+200
+hidden state. On the right-hand-side, Wi
+r, Wi
+z, and Wi
+evi are weight tensors; Bi
+r, Bi
+z, and Bi
+evi are bias tensors. The
+201
+symbol ∗denotes the convolution operator, · is element-wise multiplication in the frequency domain, tanh is an
+202
+activation function, and ⊙denotes the Hadamard product.
+203
+8
+
+
+=== Page 9 ===
+The theoretical analysis in Section 3.1 and the proof in Appendix C of Theorem 1 demonstrate that LarNO
+204
+can serve as a universal approximator for the continuous operator, thereby establishing the theoretical foundation
+205
+for spatiotemporal modeling of dynamic systems, such as those encountered in flood dynamics.
+206
+Fig. 3: LarNO for urban flood spatiotemporal forecasting. The full architecture consists of three main
+steps: (1) lifting the input at to a higher-dimensional hidden state in the latent space using a neural network L; (2)
+updating the hidden state vi
+t through N layers of LarNO; (3) projecting the hidden state to the output ut using a
+neural network P. In each LarNO layer, the model first updates the dynamic hidden state ´vi
+t using a convolutional
+operator with a gated recurrent unit, which combines information from the preceding hidden state vi
+t−1 and the
+input state vi−1
+t
+from the previous layer. The hidden state vi
+t is then updated by means of frequency- and time-
+domain transforms, followed by an activation function σ. In undertaking the frequency domain transformation,
+the Fourier transform F is applied, followed by a linear operator R on the lower Fourier modes to remove higher
+modes. Finally, the inverse Fourier transform F−1 is applied. Time domain transformation is achieved using a
+local linear operator.
+2.5 Error optimization scheme
+207
+We use spatiotemporal water-depth data generated by a hydrodynamic model as reference to compute the pre-
+208
+diction error of LarNO and optimize its neural network parameters. Due to the small proportion of flooded areas
+209
+in highly urbanized catchments, the model may underperform in learning flood patterns. To mitigate the class
+210
+imbalance caused by the low proportion of wet cells, we apply the Weighted Mean Squared Error (WMSE) loss
+211
+function, increasing the weight of wet cells to enhance predictive accuracy in such areas. The losses for wet and
+212
+dry cells are calculated as follows:
+213
+Lwet =
+1
+Nwet
+∥Mwet ⊙(ˆu −u)∥2
+2 ,
+Ldry =
+1
+Ndry
+∥Mdry ⊙(ˆu −u)∥2
+2 ,
+(12)
+where Mwet and Mdry are the mask matrices, Nwet is the sum of Mwet, and Ndry is the sum of Mdry. The symbol
+214
+⊙denotes the Hadamard product (Horn, 1990). Mwet and Mdry are complementary masks in that Mwet = 1
+215
+where water depth u > 0, and Mdry = 1 where u ≤0. The objective function is therefore defined as:
+216
+L = 1
+w
+w
+X
+t=1
+(λ · Lwet(t) + Ldry(t)) ,
+(13)
+9
+
+
+=== Page 10 ===
+where λ is the weighting coefficient, and w represents the sliding window size.
+217
+3 Theory
+218
+This section provides a theoretical analysis of LarNO, focusing on its key properties and performance guarantees.
+219
+Appendix C provides a detailed proof of these theorems.
+220
+3.1 Universal approximation of continuous operators by LarNO
+221
+To support the use of LarNO as a neural operator for nonlinear continuous systems, such as encountered in urban
+222
+flood dynamics, we use theoretical analysis to show that LarNO can universally approximate continuous operators.
+223
+Theorem 1 (Universal approximation of continuous operators by LarNO). Let D ⊂Rp, D′ ⊂Rq be compact
+224
+domains. Let the input function space be A = A(D; Rdin) and the output function space be U = U(D′; Rdout), both
+225
+assumed to be separable Banach spaces. Let NON(σ; A, U) denote the class of neural operators of depth N with
+226
+activation σ. Then, for any continuous operator G ∈C(A; U) and ∀ε > 0, there exists a LarNO Gθ ∈NON(σ; A, U)
+227
+such that
+228
+∥G(a) −Gθ(a)∥U < ε,
+∀a ∈A.
+(14)
+Theorem 1 provides a solid basis for using LarNO in nonlinear dynamic systems. In the context of urban flood
+229
+modeling, Theorem 1 ensures that the mapping from external inputs to hydrodynamic responses can be learned
+230
+with guaranteed accuracy.
+231
+3.2 Zero-shot super-resolution generalization of LarNO
+232
+To support the use of LarNO in zero-shot super-resolution generalization, we provide a theoretical analysis of
+233
+error bounds for different discretization resolutions.
+234
+Theorem 2 (Discretization invariance of LarNO). Assume that LarNO Gθ (Eq. 9) satisfies the universal approxi-
+235
+mation property as stated in Theorem 1. Let a ∈A be input and aZn ∈PZnA be its projection onto a grid Zn ⊂D
+236
+with n grid points. Suppose the activation functions σ are Lipschitz continuous (Armijo, 1966), and each T i is a
+237
+Lipschitz continuous finite-dimensional map. Then, for ∀ε > 0, there exists Np ∈N such that for all n > Np,
+238
+∥Gθ(aZn) −Gθ(a)∥U < ε.
+(15)
+Theorem 2 proves that LarNO is discretization-invariant, meaning the error bounds remain stable across
+239
+different discretized resolutions, thereby ensuring the validity of the zero-shot super-resolution generalization.
+240
+Note that this only holds when the discretization is sufficiently fine (i.e., a sufficiently large number of grid points
+241
+n) to approximate the continuous space of the nonlinear dynamical system (i.e., to resolve adequately the key
+242
+features of the system). In practice, the required resolution depends on the heterogeneity of the target system,
+243
+and the appropriate discretization level should be determined empirically.
+244
+10
+
+
+=== Page 11 ===
+4 Results
+245
+4.1 Urban flood benchmark dataset
+246
+Fig. 4: Case study area in the city of the central urban region of Shenzhen, China, spanning approx-
+imately 100 km2. To facilitate modeling, the irregular catchment is bounded by a rectangular computational
+domain consisting of 1, 600 × 2, 240 grid cells at a 5 m spatial resolution, with the exterior regions treated as
+closed boundaries.
+The study area is located in the central urban region of Shenzhen, China (and covers about a rectangular
+247
+computational domain of approximately 100 km2, corresponding to 1, 600 × 2, 240 grid cells at a 5 m spatial
+248
+resolution), as shown in Fig. 4. Here, flood risk is high due to dense urbanization and frequent heavy rainfall
+249
+events. We constructed a benchmark dataset comprising large-scale, high-resolution, long-duration spatiotemporal
+250
+dynamics of representative urban flood events induced by spatially heterogeneous extreme rainfall. First, we
+251
+utilized urban geographic information at 5-m spatial resolution to resolve street-level flood modeling. Then, we
+252
+collected 80 observed extreme rainfall events previously recorded in the study region between 2008 and 2018, with
+253
+return periods ranging from 0.1 to 20 years. All events were assigned a 6-hour duration to facilitate training and
+254
+evaluation. We randomly selected multiple rainfall centers to generate spatially heterogeneous extreme rainfall
+255
+events, typical of an urban region spanning 100 km2. A given center utilized an observed rainfall time series,
+256
+whereas the other centers generated new rainfall time series by perturbing the original series with 50% Gaussian
+257
+noise. For the remaining region, rainfall time series were generated using inverse distance weighting at 1 km
+258
+resolution.
+259
+To simulate pluvial urban flooding, we used MIKE Plus Version 2023, employing a 1D-2D coupled scheme.
+260
+Specifically, the 1D model represents the underground sewer networks and stormwater drainage pipes, while the
+261
+2D model captures the surface runoff. These two domains are dynamically coupled through drainage inlets, which
+262
+11
+
+
+=== Page 12 ===
+were configured according to available city planning data. We elevated the terrain values at building locations
+263
+by 100 m to simulate the impact of buildings on surface runoff and flood propagation. The model time step was
+264
+adjusted between 0.01 s and 1 s to maintain numerical stability (De Moura and Kubrusly, 2013). Regarding the
+265
+applicability conditions and reproducibility, the reference numerical model assumes a closed boundary across the
+266
+study domain and a dry bed initial condition. Model parameters (i.e., surface roughness) calibrated in previous
+267
+work (Cao et al., 2025) were used to simulate 6-hour spatiotemporal water depths at 5-minute intervals. These
+268
+parameters are considered valid for the current application, as they were calibrated and validated against historical
+269
+observation data in the same catchment, ensuring the reliability of the reference data.
+270
+Finally, we constructed a benchmark dataset for urban flooding, comprising 80 events with spatial dimensions
+271
+of 1,600×2,240 and a temporal dimension of 72. These events were randomly divided into a 4:1 training and
+272
+testing set to evaluate the performance of neural operators for unseen events.
+273
+4.2 Experimental settings
+274
+4.2.1 Evaluation metrics
+275
+We evaluate model accuracy using the Mean Absolute Error (MAE) and the Critical Success Index (CSI). The
+276
+MAE is defined as:
+277
+MAE =
+1
+NθHWNtest
+Ntest
+X
+i=1
+ ˆYi −Yi
+1,
+(16)
+where Ntest is the quantity of samples in the test set, Nθ is the number of forecast time steps, and H and W are
+278
+the spatial dimensions. ˆYi is the prediction for sample i, Yi is the corresponding ground truth, and ∥· ∥1 denotes
+279
+the elementwise L1 norm. CSI measures the accuracy of flood inundation prediction (with 0.15 m as a threshold),
+280
+defined as:
+281
+CSI =
+TP
+TP + FN + FP,
+(17)
+where TP is the number of true positives, FN is the number of false negatives, and FP is the number of false
+282
+positives. CSI quantifies the model’s success rate in correctly predicting the positive class, ranging from 0 to 1,
+283
+with 1 representing perfect accuracy.
+284
+4.2.2 Implementation details
+285
+Inputs to the neural operator include sequences of rainfall intensity, cumulative rainfall, Digital Surface Model
+286
+(DSM), imperviousness ratio, and drain inlet area. At each time step, the input rainfall intensity and cumulative
+287
+rainfall are based on values at the previous 6 time steps, reflecting the time of concentration in the water-
+288
+shed (Maidment, 1992). Specifically, the static spatial features (e.g., DSM and drain inlets) are concatenated with
+289
+the dynamic rainfall features at each time step, and the combined input is then fed into the lifting operator. All
+290
+input features are preprocessed using min-max normalization. The model outputs a 2D water depth map at each
+291
+prediction step. The present version of LarNO consists of 4 layers of neural networks, each with 32 channels, and
+292
+frequency domain modes set with 100 width and 140 height. To account for the relatively small proportion of wet
+293
+12
+
+
+=== Page 13 ===
+cells during a flood event, we set the weight for wet cells in the regression loss to λ = 20, following common prac-
+294
+tice (Cao et al., 2025). The number of training epochs is set to 1000. We use the Adam optimizer (Kingma and
+295
+Ba, 2014) with warm-up (He et al., 2016) and cosine annealing (Loshchilov and Hutter, 2016) learning rate strate-
+296
+gies. During implementation, the learning rate is increased linearly from 0 to 10−2 over the first 10 epochs, using
+297
+a warm-up strategy, and then gradually decreased to 10−4 during the final epoch, following the cosine anneal-
+298
+ing schedule. Training is conducted on a Linux system equipped with a 48-core AMD 7543 CPU and 8 NVIDIA
+299
+A800 PCIe GPUs with 80 GB of memory. During the testing phase, we use an NVIDIA RTX 4090 GPU with
+300
+24GB of memory and convert the PyTorch-based neural network framework (https://pytorch.org) into TensorRT
+301
+(https://developer.nvidia.com/tensorrt) to accelerate inference. To provide a clear overview of the overall model-
+302
+ing framework and facilitate reproducibility, the key applicability conditions, including model variables, boundary
+303
+conditions, and training/inference settings, are systematically summarized in Extended Table 1.
+304
+4.3 Comparison with state-of-the-art neural operators for urban flood forecasting
+305
+We now compare results from LarNO against those using a Fourier Neural Operator (FNO) (Li et al., 2021) and a
+306
+U-shaped Neural Operator (UNO) (Rahman et al., 2022) in terms of predictive accuracy. FNO is a classic neural
+307
+operator that uses Fourier transforms and Multilayer Perceptrons to efficiently learn mappings between infinite-
+308
+dimensional function spaces. UNO is a variant of FNO, which incorporates the U-Net architecture. The methods
+309
+are tested for their skill in large-scale, high-resolution, long-duration spatiotemporal forecasting of urban floods in
+310
+the 100 km2 study area in Shenzhen, China. All neural operators were first optimized on a low-resolution (20 m)
+311
+training dataset to adjust network parameters. Then, a zero-shot super-resolution generalization was performed
+312
+on test sets at higher spatial resolutions (5 m, 10 m, and 15 m).
+313
+Fig. 5 shows the urban flood spatiotemporal prediction results at 5 m spatial resolution for an extreme, spatially
+314
+heterogeneous rainfall event. From the instantaneous snapshots at different times (including the peak time) shown
+315
+in Figs. 5b-d,6a, we find that LarNO yields better defined forecasts that more closely match reference values,
+316
+with the smallest absolute error in peak water depth (Fig. 5e). By contrast, FNO and UNO incur significant
+317
+spatial errors. Additionally, FNO tends to predict dry cells as wet cells, resulting in overly smoothed results with
+318
+inaccurate details. To check the accuracy of each method in long-duration forecasting, we calculated their values
+319
+of MAE, cumulative MAE, and CSI. As shown in Fig. 5f, LarNO accumulates error significantly more slowly,
+320
+with its MAE over a 6-hour lead time being less than half that of FNO. LarNO also achieves significantly higher
+321
+accuracy in identifying the flood distribution (with CSI>0.6 throughout the flood duration). Moreover, from the
+322
+hydrographs at several randomly sampled points (Fig. 5b), we find that the water depths predicted by FNO and
+323
+UNO exhibit significant fluctuations. By contrast, LarNO’s predictions remain stable at adjacent time steps and
+324
+are highly consistent with the reference values. These results confirm that LarNO outperforms existing neural
+325
+operators in long-duration forecasting.
+326
+Fig. 6b-d illustrates the performance of each method concerning generalization across several resolutions.
+327
+We observe that: (1) LarNO consistently incurs significantly smaller error at each resolution, demonstrating its
+328
+13
+
+
+=== Page 14 ===
+superiority at large-scale, high-resolution urban flood spatiotemporal forecasting; (2) the error in LarNO’s forecasts
+329
+is nearly independent of resolution, highlighting LarNO’s flexibility and potential for real-world applications.
+330
+Fig. 7 provides an overall quantitative evaluation of the spatiotemporal modeling performance of the three
+331
+methods for urban flooding. We find that LarNO achieves the best convergence in training loss (one order of
+332
+magnitude lower than other methods), shown in Fig. 7a, which suggests its superior spatiotemporal representation
+333
+capability. On the test set, according to MAE (Fig. 7b,d), LarNO achieves O(mm) accuracy in urban flood
+334
+spatiotemporal forecasting. According to CSI (Fig. 7c,e), LarNO generates more accurate forecasts over a 6-
+335
+hour lead time, with feature changes that are more consistent with reference results from numerical simulations.
+336
+These findings confirm the skill exhibited by LarNO at large-scale, high-resolution urban flood spatiotemporal
+337
+forecasting for an extreme spatially heterogeneous rainfall event, exhibiting both stability and high accuracy in
+338
+long-duration forecasting.
+339
+To rigorously validate the practical advantage of this zero-shot super-resolution, we established a straightfor-
+340
+ward mathematical interpolation baseline. Specifically, we upsampled the 20 m prediction to a 5 m grid using
+341
+standard spatial interpolation without any learning-based refinement (Extended Fig. 1). Mechanistically, simple
+342
+interpolation merely smooths the values geometrically and fails to resolve the fine-scale hydrodynamic effects
+343
+imposed by the complex 5 m micro-terrain, yielding an overall MAE of 0.011 m and a CSI of 0.612. In contrast,
+344
+LarNO effectively reconstructs these localized physical details through its continuous-space mappings, successfully
+345
+reducing the MAE to 0.008 m and improving the CSI to 0.722. This quantitative margin explicitly confirms that
+346
+LarNO’s discretization-invariant mapping provides substantial added value beyond mere spatial downscaling.
+347
+To contextualize the predictive accuracy across different hydrological severities, we evaluate LarNO’s general-
+348
+ization performance under varying rainfall event magnitudes, categorized by return periods (≤1y, ∼2y, ∼20y,
+349
+and ≥100y) in the test set. As illustrated in Fig. 8, the absolute error (MAE) varies depending on the event
+350
+characteristics, ranging from a median of approximately 5 mm for ≤1-year events to a peak of roughly 13 mm for
+351
+∼20-year events, and stabilizing at around 8 mm for ≥100-year events (Fig. 8a). Crucially, even at its maximum,
+352
+the prediction error remains around the 1 cm scale. Furthermore, the CSI remains consistently stable at around
+353
+0.7 across all return periods (Fig. 8b). This demonstrates that LarNO maintains robust flood extent identification
+354
+and near-centimeter depth forecasting capabilities regardless of the rainfall magnitude.
+355
+Beyond pixel-wise accuracy, we further investigated the physical plausibility of LarNO’s predictions by evalu-
+356
+ating the water mass imbalance. However, as shown in Fig. 9, the average water volume error across the domain
+357
+peaks at approximately −0.15 m3/cell over the 6-hour lead time. Given the 5 m spatial resolution (25 m2 per cell),
+358
+this volume deviation translates to an equivalent water depth error of approximately −6 mm. This indicates that
+359
+while strict mass balance is not mathematically guaranteed, the overall physical discrepancy remains bounded at
+360
+the millimeter scale during long-duration simulations.
+361
+To further ground the computational efficiency and justify the model complexity, we present a comprehen-
+362
+sive side-by-side comparison in Table 1. Integrating ConvGRU into LarNO adds only ≈6K trainable parameters
+363
+because the module is shared across all neural operator layers and utilizes lightweight 1×1 convolutions. Although
+364
+14
+
+
+=== Page 15 ===
+this integration increases the theoretical computational workload (GFLOPs from 8.252 to 13.757), LarNO’s
+365
+architecture is fully compatible with Distributed Data Parallel (DDP) acceleration because we discard the unsup-
+366
+ported complex-number operations (imaginary parts) in the frequency domain. Consequently, when trained on 8×
+367
+NVIDIA A800 GPUs, LarNO requires only 1.8 days, which is actually shorter than the baseline FNO (3.2 days).
+368
+For inference, the memory requirement drops to ≈13 GB, allowing deployment on a consumer-grade NVIDIA
+369
+RTX 4090 GPU, which offers higher single-precision computational throughput than an A800. While the added
+370
+computational steps natively result in an inference latency of ≈80 seconds, LarNO’s real-valued operations make
+371
+it strictly compatible with TensorRT (TRT) deployment. TRT optimization dramatically reduces the latency to
+372
+34 seconds. In contrast, standard FNO cannot utilize TRT due to complex-number constraints. Compared to the
+373
+traditional MIKE+ model (31,961 seconds), LarNO achieves an ≈940× speedup. Given that LarNO reduces the
+374
+MAE from 0.019 m to 0.008 m compared to FNO, this performance gain robustly justifies the added computational
+375
+complexity.
+376
+Table 1: Comprehensive comparison of computational complexity, training/inference efficiency, and predictive
+accuracy for a single 6-hour flood forecast event. Params (M) denotes the number of trainable parameters in
+millions, reflecting the model’s structural capacity. GFLOPs (Giga Floating-Point Operations) measures the
+computational workload required for a single forward prediction. DDP stands for Distributed Data Parallel (https:
+//pytorch.org) compatibility, enabling multi-GPU training acceleration; TRT indicates TensorRT deployment
+(https://developer.nvidia.com/tensorrt) compatibility for optimized inference latency. The best results among the
+deep learning models are highlighted in bold.
+Method
+Complexity
+Training Phase
+Inference Phase (vs. MIKE+)
+Accuracy
+Params (M)
+GFLOPs
+Hardware
+DDP
+Time (days)
+Hardware
+TRT
+Latency (s)
+Speedup
+MAE (m)
+CSI
+MIKE+
+N/A
+N/A
+N/A
+N/A
+N/A
+NVIDIA RTX 4090
+N/A
+31, 961
+1×
+Reference
+Reference
+UNO
+109.096
+8.774
+NVIDIA A800
+×
+7.2
+NVIDIA RTX 4090
+×
+710
+≈570×
+0.024 ± 0.007
+0.343 ± 0.026
+FNO
+29.095
+8.252
+NVIDIA A800
+×
+3.2
+NVIDIA RTX 4090
+×
+760
+≈530×
+0.019 ± 0.004
+0.620 ± 0.027
+LarNO
+29.102
+13.757
+NVIDIA A800
+✓
+1.8
+NVIDIA RTX 4090
+✓
+34
+≈940×
+0.008 ± 0.003
+0.722 ± 0.016
+4.4 Ablation study
+377
+To explore the effectiveness of the spatiotemporal feature extractor in LarNO, we conduct an ablation study. We
+378
+use FNO as the baseline, which represents LarNO architecture without the ConvGRU module. Given that the
+379
+performance and limitations of FNO have been discussed in detail in Section 4.3, we focus on analyzing the new
+380
+property of our proposed method. First, we incorporate latent autoregression into the baseline and keep all other
+381
+training settings unchanged. As shown in Figs. 5 to 7, incorporating the ConvGRU-based latent autoregression into
+382
+the baseline yields substantial quantitative improvements. Specifically, under the 5 m zero-shot super-resolution
+383
+generalization (Fig. 7b,c), LarNO reduces the overall MAE by approximately 58% (from 0.019 m to 0.008 m)
+384
+and improves the CSI by 17% (from 0.620 to 0.722) compared to the baseline without the ConvGRU module.
+385
+Furthermore, regarding temporal error accumulation, LarNO maintains a consistently lower error profile over the
+386
+6-hour lead time, significantly mitigating the final cumulative MAE at 5 m resolution (Fig. 7d). These specific
+387
+15
+
+
+=== Page 16 ===
+Fig. 5: Accuracy comparison between LarNO and other baseline methods in large-scale, high-
+resolution (5 m, 5 min), long-duration (6 h) urban flood forecasting. All methods are trained on a
+dataset with a spatial resolution of 20 m and a temporal resolution of 5 min. a, Spatiotemporal changes in rainfall
+intensity with multiple gauges. b, Spatiotemporal changes in water depth obtained using Reference, LarNO, FNO,
+and UNO. c-e, Peak water depth predictions: snapshots (c), zoom-in view (d), and spatial error (e) for LarNO,
+FNO, and UNO with respect to Reference. f, Error propagation curves for water depth predictions for LarNO,
+FNO, and UNO with respect to Reference. The base map in b-e is from OpenStreetMap, released under the
+Creative Commons CC BY-SA 2.0 license.
+quantitative gains explicitly demonstrate that latent autoregression fundamentally enhances the model’s capability
+388
+to capture complex nonlinear spatiotemporal dependencies in the urban flood system.
+389
+16
+
+
+=== Page 17 ===
+Fig. 6: Accuracy comparison between LarNO and other baseline methods in zero-shot super-
+resolution generalization (5 m, 10 m, 15 m) for urban flood forecasting of an unseen event. All
+methods are trained on a dataset with a spatial resolution of 20 m. a, Spatiotemporal changes in water depth
+(5 m spatial resolution) obtained using Reference, LarNO, FNO, and UNO. b, Peak water depth error maps for
+LarNO, FNO, and UNO at different test spatial resolutions. c,d, MAE and CSI obtained using the foregoing
+methods for the same rainfall-induced flood event. The base map in a is from OpenStreetMap, released under the
+Creative Commons CC BY-SA 2.0 license.
+4.5 Transfer learning to an unseen catchment
+390
+To test the adaptability of LarNO to new regions, we conducted a transfer learning experiment on an unseen
+391
+catchment (400 m × 960 m) using high-resolution DEM data from the UK Environment Agency (N´eelz et al.,
+392
+17
+
+
+=== Page 18 ===
+Fig. 7: Quantitative evaluation of LarNO and other baseline methods in urban flood forecasting
+based on the testing set. All methods are trained on a dataset with a spatial resolution of 20 m. a, Loss curves
+during training of LarNO, FNO, and UNO. b,c, MAE and CSI for the different methods under zero-shot super-
+resolution generalization (5 m, 10 m, 15 m). d,e, Temporal MAE and CSI at 6-hour lead times for the foregoing
+methods at different test spatial resolutions.
+Fig. 8: Generalization performance of LarNO across various rainfall return periods. a, Distribution
+of MAE evaluated across the test events under different return periods. b, Distribution of CSI corresponding to
+the same hydrological severity bins. The rainfall events are categorized into four distinct hydrological severity
+bins (≤1y, ∼2y, ∼20y, and ≥100y) based on their cumulative rainfall depths, with the sample size (n) for
+each bin. In each boxplot, the thick black line denotes the median, the box spans the interquartile range (IQR,
+from the 25th to 75th percentiles), and the whiskers extend to the rest of the distribution, with outliers plotted
+as individual dots.
+18
+
+
+=== Page 19 ===
+2010). Specifically, the modeled area is located in Glasgow, UK, characterized by a “bare-earth” terrain with DEM
+393
+ranging from 21 m to 37 m (Extended Fig. 2). The catchment incorporates closed boundaries and distinct land-
+394
+cover roughness categories to distinguish roads and pavements from other surfaces. To simulate complex shallow
+395
+inundation in this new topology, we considered flood processes originating from dynamic surface runoff. Following
+396
+the method described in Section 4.1, we generated spatially heterogeneous rainfall events. To simulate data-scarce
+397
+conditions, we used only 8 events for training and 12 for testing. We compared three strategies: applying the
+398
+Shenzhen pre-trained model without fine-tuning (Pre-trained); training from scratch for 1000 epochs (Full train);
+399
+and fine-tuning the pre-trained model for 100 epochs (Fine-tuning). The learning rate and optimization scheme
+400
+for fine-tuning remained identical to the pre-training phase.
+401
+As shown in Fig. 10, the Pre-trained model fails because of the completely different local topography. While
+402
+Full train performs adequately at the 8 m training resolution, its predictions collapse at 4 m and 2 m (Fig. 10c,d).
+403
+In contrast, Fine-tuning converges rapidly in just 100 epochs and demonstrates excellent zero-shot super-resolution
+404
+at 4 m and 2 m (Fig. 10a, e-j). This difference in performance occurs because the Full train model overfits to the
+405
+specific discrete 8 m grid. Fine-tuning, however, benefits from exposure to multiple spatial resolutions (20 m in
+406
+Shenzhen, 8 m in the UK). This multi-scale exposure forces the model to learn scale-invariant physical features
+407
+rather than grid-specific patterns, allowing it to accurately predict water depths at finer, unseen resolutions.
+408
+It should also be noted that the current LarNO does not explicitly account for all factors governing urban flood
+409
+dynamics. Characteristics such as artificial flood defenses, which can differ substantially across cities, are not yet
+410
+represented as model inputs. When transferring the model to catchments where these factors diverge considerably
+411
+from the training domain, a larger number of fine-tuning samples may be required to adequately capture the local
+412
+hydrological dynamics.
+413
+Fig. 9: Assessment of water volume conservation maintained by LarNO framework over the 6-hour
+forecast horizon. The solid blue line denotes the mean volume error aggregated across all test events, while the
+shaded region represents the corresponding standard deviation. The horizontal dotted line at zero indicates the
+theoretical baseline of perfect water volume conservation (i.e., strict mass balance).
+19
+
+
+=== Page 20 ===
+Fig. 10: Cross-regional transfer learning and few-shot adaptation performance of LarNO for UK
+urban flood forecasting. The source model was originally pre-trained at a 20 m spatial resolution on a dataset
+from Shenzhen, China, and subsequently transferred to the UK catchment using a small-sample training set (n = 8
+events). All evaluations are sequentially displayed for three spatial resolutions: 2 m, 4 m, and 8 m. Notably, 8
+m serves as the local target domain’s training resolution, whereas the 2 m and 4 m outputs represent zero-shot
+super-resolution predictions. a, Spatial distributions of inundation depth comparing Reference against predictions
+generated by three distinct modeling strategies: direct application without local adaptation (Pre-trained); training
+from scratch on the target domain (Full train); and transfer learning (Fine-tuning). b, Convergence comparison
+of training loss curves. c, d, Overall MAE (c) and CSI (d) aggregated on all test events. e–j, Temporal evolution
+of MAE (e–g) and CSI (h–j) over the 6-hour forecast lead time. Solid lines denote the mean performance on all
+test events, while shaded regions represent the corresponding standard deviations.
+20
+
+
+=== Page 21 ===
+4.6 Parameter sensitivity analysis
+414
+This section examines the effects of several key hyperparameters on LarNO’s performance through comprehensive
+415
+sensitivity analyses, including the frequency-domain mode proportion, the number of neural network layers, the
+416
+number of channels per layer, the loss weighting coefficient (λ), and the spatial resolution of the training data.
+417
+First, we evaluate the impact of structural hyperparameters and the loss weighting coefficient on model accu-
+418
+racy and computational overhead (Fig. 11). As the frequency-domain mode proportion, number of NN layers,
+419
+and number of channels increase, both GPU memory demand and training time increase significantly (Fig. 11a,
+420
+c, e). However, the model’s zero-shot super-resolution accuracy stabilizes once the capacity reaches a mode pro-
+421
+portion of 0.25, 4 layers, and 32 channels (Fig. 11b, d, f). These performance thresholds can be attributed to
+422
+several underlying mechanisms. Regarding the Fourier modes, lower-frequency modes generally capture the pri-
+423
+mary large-scale spatial patterns of the flood dynamics. While incorporating higher-frequency modes can help
+424
+represent finer-grained local variations, the marginal improvement in predictive accuracy diminishes rapidly. For
+425
+the network depth, performance degrades when exceeding 4 layers, likely because excessive depth impedes effec-
+426
+tive gradient propagation during training (He et al., 2016). For the channel width, 32 is the best; smaller widths
+427
+exhibit insufficient representation capacity, whereas excessively large widths introduce redundant parameters
+428
+that lead to overfitting. Furthermore, evaluating the loss weighting coefficient λ reveals that the prediction error
+429
+reaches its minimum around λ = 20 (Fig. 11g, h). This specific weight effectively compensates for the spatial class
+430
+imbalance, properly penalizing errors in the relatively small proportion of flooded areas. These findings provide
+431
+strong empirical justification for our choices, as they achieve the optimal balance between predictive accuracy and
+432
+memory-efficient training.
+433
+Next, we train multiple versions of LarNO, FNO, and UNO using datasets with different spatial resolutions of
+434
+{15 m, 20 m, 40 m, 80 m, 100 m}. As shown in Fig. 12a,d,e, LarNO generalizes with high accuracy across resolutions
+435
+and significantly outperforms other methods. Additionally, in the zero-shot super-resolution generalization task,
+436
+performance improves as the trained spatial resolution increases, whereas model accuracy stabilizes when the
+437
+resolution reaches 20 m.
+438
+In short, to ensure accuracy and improve training efficiency with limited GPU memory (as shown in Figs. 11
+439
+and 12b-e), we set the frequency-domain mode proportion to 0.25, the number of layers to 4, the number of
+440
+channels to 32, λ to 20, and the spatial resolution of the training dataset to 20 m for all other experiments.
+441
+5 Discussion
+442
+5.1 Strengths
+443
+This study is the first to leverage the zero-shot super-resolution generalization of neural operators to achieve
+444
+large-scale, high-resolution spatiotemporal forecasting of urban floods in real-time, overcoming the massive GPU
+445
+memory demand required by conventional neural operators during training. We prove theoretically that LarNO
+446
+possesses this property (Theorem 1), but note that the resolution must be sufficiently fine to resolve key features,
+447
+21
+
+
+=== Page 22 ===
+Fig. 11: Comprehensive parameter sensitivity analysis of LarNO for urban flood forecasting. The
+model is trained exclusively at a coarse spatial resolution of 20 m and evaluated at finer target resolutions (5 m,
+10 m, and 15 m). a, Computational overhead, specifically training time (days) and GPU memory usage (GB),
+as a function of the frequency-domain mode proportion. The baseline proportion of 1.0 corresponds to the full
+400×560 modes. All hardware metrics were measured on a distributed computing node equipped with 8× NVIDIA
+A800 PCIe GPUs. b, Corresponding MAE evaluated across the different spatial resolutions. c-h, Corresponding
+computational overhead and MAE results evaluated for other key hyperparameters: the number of neural network
+layers (c, d), the number of channels per neural network layer (e, f), and the loss weighting coefficient λ (g, h).
+Error bars represent the standard deviations across all test events.
+ensuring discretization invariance. Our empirical results demonstrate that in a highly urbanized region, accurate
+448
+zero-shot super-resolution is achievable only at resolutions of 20 m or finer. This is because the complexity of
+449
+the local architecture, topography, and pipeline network would cause critical information to be lost at lower
+450
+resolutions. LarNO is found to reduce GPU memory demand by an order of magnitude compared to the target
+451
+resolution of 5 m. For other types of flood, such as river overflow floods, which have simpler spatial patterns,
+452
+broader super-resolution generalization may be possible (He et al., 2023). Zero-shot super-resolution experiments
+453
+regarding temporal resolution were not conducted in this study. This is because our method uses a fixed temporal
+454
+22
+
+
+=== Page 23 ===
+Fig. 12: Sensitivity analysis of LarNO and other baseline methods in urban flood forecasting on the
+testing set with respect to the spatial resolutions of the training data (15 m, 20 m, 40 m, 80 m, 100 m).
+All methods are tested on a dataset with a spatial resolution of 5 m. a, Peak water depth error maps for LarNO,
+FNO, and UNO under zero-shot super-resolution generalization. b,c, Training time and GPU memory usage vary
+with the spatial resolution of the training data. d,e, MAE and CSI obtained using the foregoing methods. The
+base map in a is from OpenStreetMap, released under the Creative Commons CC BY-SA 2.0 license. Error bars
+represent standard deviations.
+window for training, and therefore, the temporal length does not affect GPU memory usage; i.e., it is irrelevant
+455
+to the GPU memory bottleneck.
+456
+The latent autoregressive scheme of LarNO is implemented by embedding a spatiotemporal feature extractor
+457
+(i.e., ConvGRU) into the Fourier layer. We also prove theoretically that this novel neural operator retains a uni-
+458
+versal approximation capability similar to that of conventional neural operators. Our ablation studies demonstrate
+459
+that incorporating latent autoregression substantially reduces both spatial and temporal errors over long forecast
+460
+horizons. This is because conventional explicit autoregression feeds predicted physical states back into the model,
+461
+forcing the network to compress complex dynamics into a single variable and directly propagating prediction
+462
+errors. In contrast, latent autoregression can model temporal dependencies via high-dimensional learnable hidden
+463
+states. Meanwhile, ConvGRU jointly extracts spatiotemporal features, utilizing gating mechanisms to adaptively
+464
+control information flow and capture long-term physical trends. By maintaining a more accurate representation of
+465
+the system’s dynamics, this approach improves step-wise prediction accuracy and naturally mitigates error com-
+466
+pounding, thereby addressing the shortcomings of explicit autoregression neural operators in modeling complex
+467
+nonlinear spatiotemporal dependencies (Cao et al., 2025). It should be noted that the comparisons with FNO
+468
+23
+
+
+=== Page 24 ===
+and UNO are conducted within a controlled simulation benchmark, where all methods are trained and evaluated
+469
+on data generated by the same numerical model under identical conditions. Operational hydrological forecasting
+470
+involves substantially greater challenges, including real-time data assimilation, uncertainty quantification under
+471
+observational noise, and generalization to diverse ungauged basins. The performance advantages demonstrated
+472
+here therefore reflect LarNO’s architectural improvements over existing neural operators within this benchmark
+473
+setting, and should not be interpreted as a direct measure of readiness for operational deployment.
+474
+Finally, LarNO shows strong potential for transfer learning. The model can quickly adapt to new catchments
+475
+using a small number of training samples. By fine-tuning the pre-trained weights, LarNO retains its scale-invariant
+476
+physical mappings, ensuring robust super-resolution performance.
+477
+5.2 Limitations and future work
+478
+Although the present study has made significant progress in urban flood spatiotemporal modeling, the following
+479
+critical challenges remain to be explored. (1) Application to general flood modeling is yet to be achieved. Urban
+480
+flooding differs from other types of flooding in terms of sources, sinks, and boundary conditions. This requires
+481
+neural network models to be able to adapt to a range of input variables flexibly. For example, to predict the
+482
+spatiotemporal dynamics of a storm surge (Yang et al., 2020) or river overflow flooding (Fraehr et al., 2023), LarNO
+483
+model requires tidal levels or river stages as inputs. (2) Zero-shot generalization to unseen regions. Most studies,
+484
+including LarNO, train neural networks on data from a single region and evaluate their generalization to different
+485
+rainfall events (He et al., 2023; Situ et al., 2024; Cao et al., 2025). However, applying these models to new regions
+486
+requires generating new samples to retrain or fine-tune the neural network (Xu et al., 2025). Although researchers
+487
+have achieved spatial generalization in breach flood modeling (Bentivoglio et al., 2023), urban flood modeling is
+488
+more complex because it involves the accurate simulation of underground drainage system dynamics. This remains
+489
+a key direction for our future work. (3) Historical flood event reconstruction under data scarcity. While data-
+490
+driven models thrive on massive datasets, direct flood observations are exceptionally scarce in both space and
+491
+time (Nearing et al., 2024; Soebroto et al., 2025). This scarcity severely limits the direct training of neural networks
+492
+on real-world events. Therefore, a critical future direction is to develop advanced architectures and few-shot
+493
+training methodologies capable of robustly reconstructing historical flood dynamics from highly sparse and limited
+494
+observational data. (4) The inherent limitations of surrogate modeling. Because LarNO is trained to approximate
+495
+the solutions of MIKE+ rather than true “real-world” physics, its performance is inherently bounded by the
+496
+reference model’s fidelity. Consequently, any structural errors, parameter uncertainties, or simplified physical
+497
+assumptions inherent to the MIKE+ simulations are inevitably baked into the neural operator’s “ground truth.” In
+498
+the broader and more challenging context of operational hydrological forecasting, safely deploying such surrogate
+499
+models will require integrating real-world observational data through data assimilation or by incorporating physics-
+500
+informed constraints to actively mitigate these inherited biases.
+501
+24
+
+
+=== Page 25 ===
+6 Conclusion
+502
+This paper proposed neural operators for memory-efficient training, which achieve fast, accurate urban flood fore-
+503
+casts at large-scale and high-resolution. Our model, called LarNO, embedded spatiotemporal feature extractors
+504
+into the neural operator to implement latent autoregression, enhancing the representation of complex nonlinear
+505
+spatiotemporal dependencies. Theoretical analysis and empirical results demonstrated the effectiveness and supe-
+506
+riority of LarNO, whose inundation depth predictions were O(mm) accurate compared to the reference solution
+507
+generated by an advanced hydrodynamic model for a flood in a district of Shenzhen, China; this level of accuracy
+508
+is far better than achieved by state-of-the-art neural operators, and is accompanied by two orders of magnitude
+509
+faster in inference time over the numerical model. Furthermore, transfer learning experiments confirm that LarNO
+510
+can efficiently adapt to unseen regions using limited data. In short, our method offers a novel solution for real-time
+511
+early-warning systems and local management of large-scale urban flood events.
+512
+In practice, our proposed approach can be integrated with expert-level rainfall forecasting techniques to support
+513
+urban disaster warning systems and help inform climate-adaptive policy decisions, such as encountered in the
+514
+design of drainage systems. Moreover, LarNO can be readily deployed in public-facing applications, enabling
+515
+residents to receive real-time flood warnings on their personal mobile devices. Such an approach would enhance
+516
+public awareness and engagement in disaster response, thereby strengthening overall urban resilience. Despite
+517
+present progress, further work is needed before LarNO can be widely deployed. Key future directions include
+518
+modeling compound flood drivers, such as river discharge and storm surges, improving generalization to unseen
+519
+regions, reconstructing flood events using limited historical observations, and addressing the uncertainties inherent
+520
+in surrogate modeling by integrating real-world physical constraints and observational data assimilation.
+521
+Data availability
+522
+Dataset is available in Figshare (https://figshare.com/articles/dataset/Benchmark dataset of Large-scale urban
+523
+flood modeling and zero-shot high-resolution generalization with LarNO /30529031).
+524
+Code availability
+525
+LarNO code base is publicly available on GitHub (https://github.com/holmescao/LarNO).
+526
+CRediT authorship contribution statement
+527
+X.C., H.Q., and Y.Y. conceived and led the research project. X.C. and Y.Y. explored and designed the research
+528
+methodology. X.C. developed LarNO program and constructed flood datasets. X.C., Y.Y., and H.Q. designed
+529
+experiments and analyzed the results. X.C., Z.W., and Z.Z. conducted experiments and organized the experimental
+530
+results. X.C. and Y.Y. proposed and proved theorems for LarNO. X.C. wrote the original article. X.C., Y.Y.,
+531
+A.B., and H.Q. revised the final article and were responsible for its integrity. Y.Y. advised on the direction of the
+532
+research. H.Q. approved the submission of the paper and provided the research environment and funding support.
+533
+25
+
+
+=== Page 26 ===
+Declaration of competing interest
+534
+The authors declare that they have no known competing financial interests or personal relationships that could
+535
+have influenced the work reported in this paper.
+536
+Acknowledgements
+537
+This
+work
+was
+supported
+by
+the
+Shenzhen
+Science
+and
+Technology
+Planning
+project
+(No.
+538
+KCXFZ20230731100904010), and Innovation Team Project for General Universities in Guangdong Province,
+539
+China (No. 2023KCXTD050). Computational resources for all experiments in this study were provided by the
+540
+high-performance computing cluster of the School of Environment and Energy, Peking University Shenzhen
+541
+Graduate School, China.
+542
+26
+
+
+=== Page 27 ===
+References
+543
+Armijo, L.: Minimization of functions having lipschitz continuous first partial derivatives. Pacific Journal of
+544
+mathematics 16(1), 1–3 (1966)
+545
+Bates, P.: Fundamental limits to flood inundation modelling. Nature Water 1(7), 566–567 (2023)
+546
+Bates, P.D., De Roo, A.: A simple raster-based model for flood inundation simulation. Journal of Hydrology
+547
+236(1-2), 54–77 (2000)
+548
+Bates, P.D., Horritt, M.S., Fewtrell, T.J.: A simple inertial formulation of the shallow water equations for efficient
+549
+two-dimensional flood inundation modelling. Journal of hydrology 387(1-2), 33–45 (2010)
+550
+Burrichter, B., Hofmann, J., Silva, J., Niemann, A., Quirmbach, M.: A spatiotemporal deep learning approach for
+551
+urban pluvial flood forecasting with multi-source data. Water 15(9), 1760 (2023)
+552
+Bentivoglio, R., Isufi, E., Jonkman, S.N., Taormina, R.: Rapid spatio-temporal flood modelling via hydraulics-
+553
+based graph neural networks. Hydrology and Earth System Sciences 27(23), 4227–4246 (2023)
+554
+Buttinger-Kreuzhuber, A., Konev, A., Horv´ath, Z., Cornel, D., Schwerdorf, I., Bl¨oschl, G., Waser, J.: An inte-
+555
+grated gpu-accelerated modeling framework for high-resolution simulations of rural and urban flash floods.
+556
+Environmental Modelling & Software 156, 105480 (2022)
+557
+Berkhahn, S., Neuweiler, I.: Data driven real-time prediction of urban floods with spatial and temporal
+558
+distribution. Journal of Hydrology X 22, 100167 (2024)
+559
+Chippada, S., Dawson, C.N., Mart´ınez, M.L., Wheeler, M.F.: A godunov-type finite volume method for the system
+560
+of shallow water equations. Computer methods in applied mechanics and engineering 151(1-2), 105–129 (1998)
+561
+Centre
+for
+Research
+on
+the
+Epidemiology
+of
+Disasters:
+Disaster
+year
+in
+review
+2019.
+CRED
+562
+Crunch
+60,
+Universit´e
+catholique
+de
+Louvain
+(2020).
+https://www.cred.be/publications/
+563
+cred-crunch-issue-no-60-disaster-year-review-2019
+564
+Cheng, M., Fang, F., Navon, I., Pain, C.: A real-time flow forecasting with deep convolutional generative
+565
+adversarial network: Application to flooding event in denmark. Physics of Fluids 33(5) (2021)
+566
+Chung, J., Gulcehre, C., Cho, K., Bengio, Y.: Empirical evaluation of gated recurrent neural networks on sequence
+567
+modeling. arXiv preprint arXiv:1412.3555 (2014)
+568
+Cao, X., Wang, B., Yao, Y., Zhang, L., Xing, Y., Mao, J., Zhang, R., Fu, G., Borthwick, A.G., Qin, H.: U-rnn
+569
+high-resolution spatiotemporal nowcasting of urban flooding. Journal of Hydrology 659, 133117 (2025)
+570
+Cheng, T., Xu, Z., Hong, S., Song, S.: Flood risk zoning by using 2d hydrodynamic modeling: A case study in
+571
+27
+
+
+=== Page 28 ===
+jinan city. Mathematical Problems in Engineering 2017, 1–8 (2017)
+572
+De Moura, C.A., Kubrusly, C.S.: The courant-friedrichs-lewy (cfl) condition. AMC 10(12), 45–90 (2013)
+573
+Fraehr, N., Wang, Q.J., Wu, W., Nathan, R.: Supercharging hydrodynamic inundation models for instant flood
+574
+insight. Nature Water 1(10), 835–843 (2023)
+575
+Gregor, K., Danihelka, I., Mnih, A., Blundell, C., Wierstra, D.: Deep autoregressive networks. In: International
+576
+Conference on Machine Learning, pp. 1242–1250 (2014). PMLR
+577
+Gong, J., Hou, J., Xue, Y., Zhang, D., Zhang, Z., Yang, S., Han, H.: Computational efficiency of gpu acceleation
+578
+in numerical simulation of urban rain-flood process. Environmental Engineering 38(4), 164–169 (2020)
+579
+Guo, Y., Li, Y., Farjudian, A.: Validated computation of lipschitz constant of recurrent neural networks. In:
+580
+Proceedings of the 2023 7th International Conference on Machine Learning and Soft Computing, pp. 46–52
+581
+(2023)
+582
+Huber, W.C., Dickinson, R.E., Barnwell Jr, T.O., Branch, A.: Storm water management model; version 4.
+583
+Environmental Protection Agency, United States (1988)
+584
+Hanert, E., Le Roux, D.Y., Legat, V., Deleersnijder, E.: An efficient eulerian finite element method for the shallow
+585
+water equations. Ocean Modelling 10(1-2), 115–136 (2005)
+586
+Horn, R.A.: The hadamard product. In: Proc. Symp. Appl. Math, vol. 40, pp. 87–169 (1990)
+587
+He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image recognition. In: Proceedings of the IEEE
+588
+Conference on Computer Vision and Pattern Recognition, pp. 770–778 (2016)
+589
+He, J., Zhang, L., Xiao, T., Wang, H., Luo, H.: Deep learning enables super-resolution hydrodynamic flooding
+590
+process modeling under spatiotemporally varying rainstorms. Water Research 239, 120057 (2023)
+591
+Kingma, D.P., Ba, J.: Adam: A method for stochastic optimization. Preprint at https://arxiv.org/abs/1412.6980
+592
+(2014)
+593
+Kovachki, N., Li, Z., Liu, B., Azizzadenesheli, K., Bhattacharya, K., Stuart, A., Anandkumar, A.: Neural operator:
+594
+Learning maps between function spaces with applications to pdes. Journal of Machine Learning Research 24(89),
+595
+1–97 (2023)
+596
+LeCun, Y., Bengio, Y., Hinton, G.: Deep learning. Nature 521(7553), 436–444 (2015)
+597
+Liu, Q., Du, M., Wang, Y., Deng, J., Yan, W., et al.: Global, regional and national trends and impacts of natural
+598
+floods, 1990–2022. Bulletin of the World Health Organization 102(6), 410–420 (2024) https://doi.org/10.2471/
+599
+BLT.23.289123
+600
+28
+
+
+=== Page 29 ===
+Loshchilov, I., Hutter, F.: Sgdr: Stochastic gradient descent with warm restarts. Preprint at https://arxiv.org/
+601
+abs/1608.03983 (2016)
+602
+Li, D., Hou, J., Zhang, Y., Guo, M., Zhang, D.: Influence of time step synchronization on urban rainfall-runoff
+603
+simulation in a hybrid cpu/gpu 1d-2d coupled model. Water Resources Management 36(10), 3417–3433 (2022)
+604
+Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart, A., Anandkumar, A.: Fourier neural
+605
+operator for parametric partial differential equations. arXiv preprint arXiv:2010.08895 (2020)
+606
+Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart, A., Anandkumar, A.: Fourier neural
+607
+operator for parametric partial differential equations. In: Proceedings of the 9th International Conference on
+608
+Learning Representations (ICLR) (2021). https://openreview.net/forum?id=c8P9NQVtmnO
+609
+Logan, T., Reilly, A.: Risk of isolation increases the urgency and spatial extent of climate change adaptation.
+610
+Nature Climate Change 13(4), 322–323 (2023)
+611
+Liao, Y., Wang, Z., Yu, H., Gao, W., Zeng, Z., Li, X., Lai, C.: Accelerating urban flood inundation simulation
+612
+under spatio-temporally varying rainstorms using convlstm deep learning model. Water Resources Research
+613
+61(8), 2025–040433 (2025)
+614
+Maidment, D.R.: Handbook of Hydrology., (1992)
+615
+Ming, X., Liang, Q., Xia, X., Li, D., Fowler, H.J.: Real-time flood forecasting based on a high-performance 2-d
+616
+hydrodynamic model and numerical weather predictions. Water Resources Research 56(7), 2019–025583 (2020)
+617
+Mananoma, T., Sumarauw, J., Legrans, R., Ratu, Y.: Designing a multistage flood control channel for sediment
+618
+and flow management in coastal areas. Journal of Human, Earth, and Future 6(3), 654–662 (2025)
+619
+Nearing, G., Cohen, D., Dube, V., Gauch, M., Gilon, O., Harrigan, S., Hassidim, A., Klotz, D., Kratzert, F.,
+620
+Metzger, A., et al.: Global prediction of extreme floods in ungauged watersheds. Nature 627(8004), 559–563
+621
+(2024)
+622
+Neal, J., Fewtrell, T., Trigg, M.: Parallelisation of storage cell flood models using openmp. Environmental
+623
+Modelling & Software 24(7), 872–877 (2009)
+624
+N´eelz, S., Pender, G., et al.: Benchmarking of 2d hydraulic modelling packages (2010)
+625
+Patro, S., Chatterjee, C., Mohanty, S., Singh, R., Raghuwanshi, N.: Flood inundation modeling using mike flood
+626
+and remote sensing data. Journal of the Indian Society of Remote Sensing 37, 107–118 (2009)
+627
+Pilon, P.J.: Guidelines for reducing flood losses. Technical report, United Nations International Strategy for
+628
+Disaster Reduction (2004). https://www.undrr.org/publication/guidelines-reducing-flood-losses
+629
+29
+
+
+=== Page 30 ===
+Prein, A.F., Rasmussen, R.M., Ikeda, K., Liu, C., Clark, M.P., Holland, G.J.: The future intensification of hourly
+630
+precipitation extremes. Nature Climate Change 7(1), 48–52 (2017)
+631
+Qin, J., Gao, L., Lin, K., Shen, P.: A novel and efficient method for real-time simulating spatial and temporal
+632
+evolution of coastal urban pluvial flood without drainage network. Environmental Modelling & Software 172,
+633
+105888 (2024)
+634
+Rentschler, J., Avner, P., Marconcini, M., Su, R., Strano, E., Vousdoukas, M., Hallegatte, S.: Global evidence of
+635
+rapid urban growth in flood zones since 1985. Nature 622(7981), 87–92 (2023)
+636
+Ren, H., Pang, B., Zhao, G., Yu, H., Tian, P., Xie, C.: Incorporating dynamic drainage supervision into deep
+637
+learning for accurate real-time flood simulation in urban areas. Water Research 270, 122816 (2025)
+638
+Rahman, M.A., Ross, Z.E., Azizzadenesheli, K.: U-no: U-shaped neural operators. arXiv preprint arXiv:2204.11127
+639
+(2022)
+640
+Rogers, D., Tsirkunov, V.: Costs and benefits of early warning systems: Global assessment report on disas-
+641
+ter risk reduction. Technical report, The World Bank (2010). https://www.preventionweb.net/publication/
+642
+costs-and-benefits-early-warning-systems-global-assessment-report-disaster-risk
+643
+Rau, M.I., Yoshikawa, N., Sato, H., Sato, Y., Takanobu, K., Kimura, M.: Development and evaluation of inland
+644
+flood inundation modeling using long short-term memory (lstm). Paddy and Water Environment, 1–17 (2025)
+645
+Shi, X., Chen, Z., Wang, H., Yeung, D.-Y., Wong, W.-K., Woo, W.-c.: Convolutional lstm network: A machine
+646
+learning approach for precipitation nowcasting. Advances in neural information processing systems 28 (2015)
+647
+Supratman, M., Kusuma, M.S.B., Cahyono, M., Kuntoro, A.A., et al.: An assessment of nature-based solutions
+648
+water infrastructure for flood risk reduction in unplanned area. Civ Eng J 11, 1827–55 (2025)
+649
+Schubert, J.E., Luke, A., AghaKouchak, A., Sanders, B.F.: A framework for mechanistic flood inundation
+650
+forecasting at the metropolitan scale. Water Resources Research 58(10), 2021–031279 (2022)
+651
+Soebroto, A.A., Limantara, L.M., Suhartanto, E., Sholichin, M., Ramdani, F., Rachmawati, T.A.: Evaluation of
+652
+flood inundation image detection performance using deep learning. Civil Engineering Journal 11(11), 4572–4586
+653
+(2025)
+654
+Sanders, B.F., Schubert, J.E.: Primo: Parallel raster inundation model. Advances in Water Resources 126, 79–95
+655
+(2019)
+656
+Situ, Z., Wang, Q., Teng, S., Feng, W., Chen, G., Zhou, Q., Fu, G.: Improving urban flood prediction using lstm-
+657
+deeplabv3+ and bayesian optimization with spatiotemporal feature fusion. Journal of Hydrology 630, 130743
+658
+(2024)
+659
+30
+
+
+=== Page 31 ===
+United Nations, D.o.E., Social Affairs, P.D.: World urbanization prospects: The 2018 revision. Technical report,
+660
+United Nations (2018)
+661
+Woo, H., Choi, H., Kim, M., Noh, S.J.: Physics-guided deep learning for spatiotemporal evolution of urban pluvial
+662
+flooding. Water 17(8), 1239 (2025)
+663
+Wang, Z., Lyu, H., Fu, G., Zhang, C.: Time-guided convolutional neural networks for spatiotemporal urban flood
+664
+modelling. Journal of Hydrology 645, 132250 (2024)
+665
+World Meteorological Organization: The global climate 2001–2010: A decade of climate extremes. Technical report,
+666
+World Meteorological Organization (2013)
+667
+World
+Health
+Organization:
+Global
+Report
+on
+Drowning:
+Preventing
+a
+Leading
+Killer,
+(2014).
+668
+https://www.who.int/publications/i/item/global-report-on-drowning-preventing-a-leading-killer
+669
+Xu, Q., De Vos, L.F., Shi, Y., R¨uther, N., Bronstert, A., Zhu, X.X.: Urban flood modeling and forecasting with
+670
+deep neural operator and transfer learning. Journal of Hydrology, 133705 (2025)
+671
+Xu, L., Gao, L.: A hybrid surrogate model for real-time coastal urban flood prediction: An application to macao.
+672
+Journal of Hydrology 642, 131863 (2024)
+673
+Xu, Q., Shi, Y., Bamber, J.L., Ouyang, C., Zhu, X.X.: Large-scale flood modeling and forecasting with floodcast.
+674
+Water Research 264, 122162 (2024)
+675
+Yang, K., Paramygin, V.A., Sheng, Y.P.: A rapid forecasting and mapping system of storm surge and coastal
+676
+flooding. Weather and Forecasting 35(4), 1663–1681 (2020)
+677
+Zhang, L., Qin, H., Mao, J., Cao, X., Fu, G.: High temporal resolution urban flood prediction using attention-based
+678
+lstm models. Journal of Hydrology 620, 129499 (2023)
+679
+31
+
+
+=== Page 32 ===
+Appendices
+680
+A Extended Data
+681
+Extended Table 1: Summary of model applicability, catchment characteristics, and spatiotemporal configura-
+tions for the proposed LarNO framework.
+Category
+Parameter / Setting
+Description / Value
+Catchment Characteristics
+Study Area
+Futian District, highly urbanized catchment
+Catchment Area
+Approx. 100 km2
+Topography (DEM)
+Elevation ranges from 0 m to 382 m
+Boundary & Initial Conditions
+Initial Condition
+Dry bed condition at t = 0 (Initial water depth h = 0)
+Boundary Condition
+Closed boundary across the study domain
+Spatiotemporal Resolution
+Spatial Resolution
+5 m, 10 m, 15 m, and 20 m grids
+Temporal Resolution
+∆t = 5 minutes
+Model Variables
+Static Inputs
+Building-resolved
+Digital
+Elevation
+Model
+(DEM);
+Binary spatial mask (0/1) indicating drainage inlet loca-
+tions
+Dynamic Inputs
+Spatiotemporally varying rainfall intensity
+Predicted State Variable
+Inundation water depth (h)
+Training vs. Inference
+Sequence Length (Training)
+8 time steps (40-minute rollout) for gradient calculation
+Sequence Length (Inference)
+72 time steps (6-hour full event forecast)
+Batch Size
+8 during training, 1 during inference
+Extended Table 2: Comparison of study areas, spatial points, spatial resolution, time step, temporal resolution,
+and spatiotemporal points in existing urban flood spatiotemporal forecasting studies. Each study corresponds to
+the numbered circles in Fig. 1.
+Number
+Literature
+Area
+(km2)
+Spatial
+points
+Spatial
+resolution (m)
+Time step
+Temporal
+resolution (min)
+Spatiotemporal
+points (×106)
+1
+(Rau et al., 2025)
+96
+13,814
+80
+144
+30
+2
+2
+(Wang et al., 2024)
+2
+61,440
+5
+36
+5
+2.2
+3
+(Qin et al., 2024)
+1
+5,312
+14
+500
+0.3
+2.7
+4
+(Liao et al., 2025)
+74
+225,404
+8
+12
+15
+2.7
+5
+(Cheng et al., 2021)
+17
+39,290
+21
+145
+10
+5.7
+6
+(Woo et al., 2025)
+56
+563,000
+10
+16
+60
+9
+7
+(Burrichter et al., 2023)
+3
+772,415
+2
+12
+5
+9.3
+8
+(Xu and Gao, 2024)
+9
+213,297
+4
+88
+15
+18.8
+9
+(Xu et al., 2025)
+8
+888,889
+3
+24
+120
+21.3
+10
+(Berkhahn and
+Neuweiler, 2024)
+5
+186,690
+6
+144
+5
+26.9
+11
+(Ren et al., 2025)
+17
+224,373
+10
+288
+5
+64.6
+12
+(Cao et al., 2025)
+1
+250,000
+2
+360
+1
+90
+13
+Ours
+90
+3,584,000
+5
+72
+5
+258
+32
+
+
+=== Page 33 ===
+Extended Fig. 1: Super-resolution predictive performance of LarNO compared to baseline spatial
+interpolation. a, Spatial distributions of inundation depth for a representative test event. The panels compare
+the 5 m reference (left), the prediction upsampled from 20 m to 5 m via standard mathematical interpolation
+(middle), and the direct 5 m output generated by LarNO super-resolution (SR) capability (right). b, c, Temporal
+evolution of MAE (b) and CSI (c) over the 6-hour forecast lead time. Solid lines denote the mean performance
+across all test events, while shaded regions represent the corresponding standard deviations. d, e, Overall MAE
+(d) and overall CSI (e) on all test events, with error bars indicating standard deviations.
+33
+
+
+=== Page 34 ===
+Extended Fig. 2: Unseen transfer learning case study area in Glasgow, UK, spanning approximately
+0.4 km2. To facilitate modeling, the catchment is bounded by a rectangular computational domain consisting of
+200 × 480 grid cells at a 2 m spatial resolution, with the exterior regions treated as closed boundaries.
+34
+
+
+=== Page 35 ===
+B Neural operator architecture
+682
+The neural operator is designed to learn infinite-dimensional mappings by utilizing a sequence of functions through
+683
+an iterative process v0 →v1 →· · · →vN, where each vi belongs to Rdvi, and dvi is the dimension. The process
+684
+typically includes three steps: lifting, iterative kernel integration, and projection. In the lifting step, the input
+685
+a ∈A is transformed into a higher-dimensional hidden state v0 = L(a) using the lifting operator L, typically
+686
+parameterized by a shallow, fully-connected neural network. Next, multiple iterative processes are used to update
+687
+the representation, vi →vi+1. Each iteration consists of a combination of a linear operator Wi, kernel integration
+688
+operator Ki, bias function Bi, and nonlinear activation function σ. The final output u = P(vN) is the projection
+689
+of vN via the projection operator P using a shallow, fully-connected neural network. The architecture can be
+690
+expressed as:
+691
+Gθ = P ◦
+ N
+Y
+i=1
+vi
+!
+◦L,
+vi = σ(Wi + Ki + Bi),
+(B.1)
+where L : Rda →Rdv1 and P : RdvN →Rdu are the lifting and projection mappings. Wi ∈Rdvi+1×dvi is the linear
+692
+operator. Ki : {vi : Di →Rdvi} →{vi+1 : Di+1 →Rdvi+1} is the integral kernel operator. Bi : Di →Rdvi is the
+693
+bias function. σ is a fixed activation function that acts locally to map Rdvi →Rdvi at each layer. The dimensions
+694
+and domains of inputs and outputs are both hyperparameters.
+695
+The update of the kernel integral operator mapping is defined as:
+696
+ Ki(a; θKi)vi
+(x) :=
+Z
+D
+κi(x, y, a(x), a(y); θKi)vi(y) dy,
+∀x ∈D,
+(B.2)
+where κi is a neural network parameterized by θKi ∈ΘK. To effectively parameterize the kernel κ, v is typically
+697
+represented in Fourier space, and the FFT is used. By setting κ(x, y, a(x), a(y)) = κ(x −y) and applying the
+698
+convolution theorem, we obtain:
+699
+(K(a; θK)v) (x) = F−1 (F (κ) · F (v)) (x),
+(B.3)
+where F denotes the Fourier transform of a function f : D →Rdv, and F−1 is its inverse transform. Now, we can
+700
+directly parameterize κ through Fourier coefficients:
+701
+(K(a; θK)v) (x) = F−1 (R · (Fv)) (x)
+∀x ∈D,
+(B.4)
+where R is the Fourier transform of the periodic function κ.
+702
+Given that κ is assumed to be periodic, a Fourier series expansion can be applied, and operations are carried
+703
+out in the discrete mode of the Fourier transform. First, the Fourier series is truncated to the maximum mode
+704
+kmax, and R is then directly parameterized as a complex-valued (kmax × dv × dv)-tensor containing the truncated
+705
+35
+
+
+=== Page 36 ===
+Fourier coefficients. Thus, multiplication of the learned weight tensor R is giveb by:
+706
+(R · (Fv))k,l =
+dv
+X
+j=1
+Rk,l,j (Fv)k,j ,
+k = 1, . . . , kmax,
+l = 1, . . . , dv.
+(B.5)
+where dv denotes the dimension of the hidden state v. By replacing F with FFT and implementing R through
+707
+direct linear parameterization, we obtain the Fourier operator, which has nearly linear complexity.
+708
+36
+
+
+=== Page 37 ===
+C Proof of theorems
+709
+Lemma 1 (Approximation of finite-dimensional neural networks by LarNO). Let φ : Rp →Rd be a feedforward
+710
+neural network defined as
+711
+φ(x) = WNσ(WN−1σ(· · · σ(W1x + B1) · · · ) + BN−1) + BN,
+(C.6)
+where Wi ∈Rdi×di−1 and Bi ∈Rdi for all i = 1, . . . , N.
+712
+Then, there exists a LarNO Gθ such that
+713
+φ(x) ≡Gθ(x),
+(C.7)
+where Gθ is of the form
+714
+Gθ = P ◦
+ N
+Y
+i=1
+σ(Wi + Ki) ◦T i + Bi
+!
+◦L,
+(C.8)
+with P, L being affine maps, Ki the kernel integral operator, and T i the spatiotemporal feature extractor.
+715
+Proof. We aim to show that a finite-dimensional feedforward neural network φ(x) can be represented exactly by
+716
+a LarNO operator Gθ evaluated at a point x.
+717
+First, approximate each integral kernel operator Ki by a degenerate kernel:
+718
+κi(x, y) :=
+1
+|D|W′i
+⇒
+(Kiu)(x) = W′i · ¯u,
+(C.9)
+where ¯u is the average of u over domain D. Assuming u is sufficiently regular that ¯u ≈u(x), we get:
+719
+Kiu(x) ≈W′iu(x).
+(C.10)
+Thus,
+720
+σ
+ (Wi + Ki)u(x) + Bi
+≈σ
+ (Wi + W′i)u(x) + Bi
+.
+(C.11)
+Letting ˜
+Wi := Wi + W′i and ˜Bi := Bi, this reduces to a classical neural network layer.
+721
+Next, each temporal modeling block T i is a finite-depth recurrent unit, which can be unfolded into a
+722
+composition of affine maps and nonlinearities:
+723
+T i(x) = σ (WT i · · · σ (W2σ(W1x + B1) + B2) · · · + BT i) ,
+(C.12)
+which itself is a finite subnetwork acting on vector inputs.
+724
+Substituting all elements into LarNO operator, we get:
+725
+Gθ(x) = P ◦
+h
+σ
+
+˜
+WN · · · σ
+
+˜
+W1Φ1(x) + ˜B1
+
++ · · ·
+
++ ˜BN
+i
+◦L,
+(C.13)
+37
+
+
+=== Page 38 ===
+where Φi(x) represents the subnetwork from T i.
+726
+This expression matches the structure of φ(x) exactly. Thus, we conclude:
+727
+φ(x) ≡Gθ(x),
+(C.14)
+728
+Theorem 1 (Universal approximation of continuous operators by LarNO). Let D ⊂Rp, D′ ⊂Rq be compact
+729
+domains. Let the input function space be A = A(D; Rdin) and the output function space be U = U(D′; Rdout), both
+730
+assumed to be separable Banach spaces. Let NON(σ; A, U) denote the class of neural operators of depth N with
+731
+activation σ.
+732
+Then, for any continuous operator G ∈C(A; U) and ∀ε > 0, there exists a LarNO Gθ ∈NON(σ; A, U) such that
+733
+∥G(a) −Gθ(a)∥U < ε,
+∀a ∈A.
+(C.15)
+Proof. By the universal approximation theorem for neural operators (Theorem 11 in (Kovachki et al., 2023)),
+734
+there exists a neural operator eGθ ∈NON(σ; A, U) such that
+735
+∥G(a) −eGθ(a)∥U < ε,
+∀a ∈A.
+(C.16)
+By Lemma 1, any feedforward network component within eGθ can be exactly mimicked by a LarNO block.
+736
+Since eGθ is constructed from such components, there exists a LarNO operator Gθ ∈NON(σ; A, U) such that
+737
+eGθ(a) ≡Gθ(a),
+∀a ∈A.
+(C.17)
+Therefore,
+738
+∥G(a) −Gθ(a)∥U < ε,
+∀a ∈A.
+(C.18)
+739
+Theorem 2 (Discretization invariance of LarNO). Assume that LarNO Gθ (Eq. 9) satisfies the universal approx-
+740
+imation property as stated in Theorem 1. Let a ∈A be input and aZn ∈PZnA be its projection onto a grid
+741
+Zn ⊂D with n grid points. Suppose the activation functions σ are Lipschitz continuous, and each T i is a Lipschitz
+742
+continuous finite-dimensional map. Then, for ∀ε > 0, there exists Np ∈N such that for all n > Np,
+743
+∥Gθ(aZn) −Gθ(a)∥U < ε.
+(C.19)
+38
+
+
+=== Page 39 ===
+Proof. We write Gθ = P ◦F N ◦· · · ◦F 1 ◦L where
+744
+F i(x) = σ
+ (Wi + Ki) T i(x) + Bi
+.
+(C.20)
+First, we construct a finite-rank approximation Ki(n) of Ki acting on L2(D; Rd) on the grid Zn by projecting
+745
+the kernel to a truncated Fourier basis or other low-rank representation ((Kovachki et al., 2023), Theorem 8).
+746
+Then for ∀v ∈L2(D), we have
+747
+∥Ki(n)(v) −Ki(v)∥L2(D) < εi(n),
+with εi(n) →0 as n →∞.
+(C.21)
+According to (Guo et al., 2023), each spatiotemporal feature extractor T i (i.e., ConvGRU) can be regarded
+748
+as a finite-dimensional Lipschitz continuous (Armijo, 1966) map with constant LT i:
+749
+∥T i(aZn) −T i(a)∥≤LT i∥aZn −a∥.
+(C.22)
+We now estimate the error introduced in each layer F i when applying spatiotemporal feature extraction T i
+750
+to aZn versus a. Let
+751
+F i(n)(aZn) := σ
+ (Wi + Ki(n)) T i(aZn) + Bi
+,
+F i(a) := σ
+ (Wi + Ki) T i(a) + Bi
+.
+(C.23)
+By Lipschitz continuity of σ, we have
+752
+∥F i(n)(aZn) −F i(a)∥≤Lσ · ∥(Wi + Ki(n))T i(aZn) −(Wi + Ki)T i(a)∥,
+(C.24)
+where the bias Bi cancels out in the difference.
+753
+This can be bounded as
+754
+∥(Wi + Ki(n))T i(aZn) −(Wi + Ki)T i(a)∥≤∥Ki(n)T i(aZn) −KiT i(a)∥
++ ∥Wi(T i(aZn) −T i(a))∥.
+(C.25)
+The first term satisfies
+755
+∥Ki(n)T i(aZn) −KiT i(a)∥≤∥Ki(n) −Ki∥· ∥T i(aZn)∥+ ∥Ki∥· ∥T i(aZn) −T i(a)∥.
+(C.26)
+39
+
+
+=== Page 40 ===
+Given that ∥T i(aZn)∥is uniformly bounded and both ∥Ki(n) −Ki∥→0 and ∥T i(aZn) −T i(a)∥→0, the full
+756
+expression converges to zero. Therefore, there exists δi(n) with
+757
+∥F i(n)(aZn) −F i(a)∥< δi(n),
+where δi(n) →0 as n →∞.
+(C.27)
+Finally, since Gθ is a composition of N such layers plus affine maps P, L, and all components are Lipschitz,
+758
+their composition remains Lipschitz with constant LG. Thus,
+759
+∥Gθ(aZn) −Gθ(a)∥U < LG ·
+ 
+∥aZn −a∥+
+N
+X
+i=1
+δi(n)
+!
+.
+(C.28)
+Given that both ∥aZn −a∥→0 and δi(n) →0 as n →∞, we conclude that for ∀ε > 0, there exists Np such
+760
+that for all n > Np,
+761
+∥Gθ(aZn) −Gθ(a)∥U < ε.
+(C.29)
+762
+40
+
+
