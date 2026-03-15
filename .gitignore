@@ -1,20 +1,9 @@
 # ── Claude Code workspace & internal planning docs (not for repo) ────────────
 .claude/
 CLAUDE.md
-encapsulated-sniffing-frost.md
-Manuscript.pdf
-已做的策略.md
-开源推进.md
-正在执行的策略.md
 
 # ── HuggingFace upload scripts (internal tooling, not for repo) ──────────────
 huggingface/
-
-# ── PDF extraction artifacts ──────────────────────────────────────────────────
-extract_pdf.py
-extract_pdf2.py
-pdf_extracted.txt
-pdf_all_pages.txt
 
 # ── Large data & outputs (download separately) ──────────────────────────────
 benchmark/
