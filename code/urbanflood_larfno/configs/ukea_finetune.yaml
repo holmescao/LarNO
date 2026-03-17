@@ -107,7 +107,7 @@ default: &DEFAULT
   # Evaluation
   eval:
     flood_threshold: 0.03   # water depth (m) above which a cell is "flooded" (CSI)
-    locations: "ukea_8m_5min,ukea_2m_5min"   # add "ukea_2m_5min" for zero-shot super-resolution eval
+    locations: "ukea_8m_5min,ukea_2m_5min"   # 8m train resolution + 2m zero-shot super-resolution
 
   # Patching (disabled)
   patching:

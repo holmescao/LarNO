@@ -6,6 +6,7 @@
   <a href="https://holmescao.github.io/datasets/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
   <a href="https://huggingface.co/holmescao/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-LarNO-yellow" alt="HuggingFace Model"></a>
   <a href="https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+  <a href="https://github.com/holmescao/U-RNN"><img src="https://img.shields.io/badge/Related%20Work-U--RNN-brightgreen" alt="U-RNN"></a>
 </p>
 
 ---
@@ -86,6 +87,17 @@ Comparison on the Futian district (~100 km², Shenzhen) benchmark — **5 m reso
 > † Inference time for a single 6-hour flood event on NVIDIA RTX 4090.
 > ‡ LarNO inference uses **TensorRT (TRT)** acceleration; UNO and FNO do not support TRT.
 > **Note:** The released dataset is a **20 m downsampled version** for accessibility. Metrics on the released 20 m data will differ from the 5 m paper results above.
+
+### UKEA benchmark (released dataset)
+
+LarNO fine-tuned from Futian pre-trained weights on the UKEA small case (`ukea_8m_5min`, 8 train events, 100 epochs). Evaluated on 12 test events.
+
+| Resolution | Setting | R² ↑ | MAE (m) ↓ | CSI ↑ | PeakR² ↑ |
+|---|---|---|---|---|---|
+| **8 m** | Fine-tune (train resolution) | **0.948 ± 0.056** | **0.0093 ± 0.0074** | **0.741 ± 0.030** | 0.949 ± 0.049 |
+| **2 m** | Zero-shot super-resolution (4×) | 0.776 ± 0.129 | 0.0163 ± 0.0101 | 0.515 ± 0.052 | 0.820 ± 0.101 |
+
+> Zero-shot 2 m results use the model trained at 8 m — no 2 m data seen during training.
 
 ---
 
@@ -191,9 +203,11 @@ LarNO is evaluated on two benchmark datasets. **We recommend starting with the s
 
 ### Download links
 
-| Dataset | Link |
+| Mirror | Link |
 |---|---|
-| UKEA & Futian | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
+| figshare | [10.6084/m9.figshare.30529031](https://doi.org/10.6084/m9.figshare.30529031) |
+| Google Drive | [Download (no password)](https://drive.google.com/file/d/13VRExXwoFznTLIQKApn5O0_fxKsi8ThI/view?usp=sharing) |
+| HuggingFace | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
 
 📁 Unzip and place data so the directory tree looks like:
 
@@ -219,11 +233,13 @@ LarNO/
 | `rainfall.npy` | `(T, H, W)` | mm / 5 min | Rainfall intensity per 5-minute step. |
 | `h.npy` | `(T, H, W)` | metres | Ground-truth water depth from **MIKE+**. |
 
-| Location | H | W | T |
-|---|---|---|---|
-| `ukea_8m_5min` | 50 | 120 | 72 |
-| `ukea_2m_5min` | 200 | 480 | 72 |
-| `region1_20m` | 400 | 560 | 72 |
+| Location | H | W | T | Duration |
+|---|---|---|---|---|
+| `ukea_8m_5min` | 50 | 120 | 36 | 3 h (5-min steps) |
+| `ukea_2m_5min` | 200 | 480 | 36 | 3 h (5-min steps) |
+| `region1_20m` | 400 | 560 | 72 | 6 h (5-min steps) |
+
+> **Why does UKEA have T=36 while Futian has T=72?** The UKEA events cover a 3-hour simulation window; the Futian events cover 6 hours. Both use 5-minute time steps.
 
 ### Event lists
 
@@ -981,5 +997,20 @@ If you use LarNO in your research, please cite:
   journal = {[TODO: journal]},
   year    = {2025},
   doi     = {[TODO: DOI]}
+}
+```
+
+### Related Work — U-RNN
+
+If your work involves high-resolution spatiotemporal nowcasting of urban flooding, you may also be interested in our related work **[U-RNN](https://github.com/holmescao/U-RNN)**, which focuses on urban flood nowcasting at high spatial-temporal resolution and was published in *Journal of Hydrology*:
+
+```bibtex
+@article{cao2025u,
+  title={U-RNN high-resolution spatiotemporal nowcasting of urban flooding},
+  author={Cao, Xiaoyan and Wang, Baoying and Yao, Yao and Zhang, Lin and Xing, Yanwen and Mao, Junqi and Zhang, Runqiao and Fu, Guangtao and Borthwick, Alistair GL and Qin, Huapeng},
+  journal={Journal of Hydrology},
+  pages={133117},
+  year={2025},
+  publisher={Elsevier}
 }
 ```
