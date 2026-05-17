@@ -27,7 +27,7 @@
 
 ## News
 
-- 🎉 **[15/05/2026]** [LarNO](https://doi.org/10.1016/j.jhydrol.2026.135686) is now online in **Journal of Hydrology**!
+- **[15/05/2026]** 🎉🎉🎉[LarNO](https://doi.org/10.1016/j.jhydrol.2026.135686) is now online in **Journal of Hydrology**!
 - **[12/03/2026]** Pre-trained weights and benchmark dataset published on **[HuggingFace](https://huggingface.co/holmescao/LarNO)** — download without Google Drive or Baidu Cloud.
 - **[12/03/2026]** Interactive demo released — run LarNO inference in your browser with **[Google Colab](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)**, no installation needed.
 - **[02/03/2026]** Full end-to-end reproduction tutorial released — train and test LarNO with **a single GPU on [AutoDL](https://www.autodl.com/)**.
