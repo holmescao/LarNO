@@ -22,7 +22,7 @@
 - Latent autoregression improves the representation of nonlinear spatiotemporal flood dynamics.
 - LarNO enables large-scale flood forecasting over **millions of grid cells** (~100 km2) and **sub-billion spatiotemporal points** (5 m and 5 min resolution).
 - LarNO achieves **O(mm)-level water-depth accuracy**.
-- LarNO supports few-shot transfers to unseen catchments via fine-tuning.
+- LarNO supports **few-shot transfers** to unseen catchments via **fine-tuning**.
 - LarNO supports **multi-GPU distributed training** and **TensorRT-accelerated inference**.
 
 ## News
