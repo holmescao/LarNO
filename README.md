@@ -1009,8 +1009,6 @@ doi = {10.6084/m9.figshare.30529031.v4}
 }
 ```
 
-### Related Work — U-RNN
-
 If your work involves high-resolution spatiotemporal nowcasting of urban flooding, you may also be interested in our related work **[U-RNN](https://github.com/holmescao/U-RNN)**, which focuses on urban flood nowcasting at high spatial-temporal resolution and was published in *Journal of Hydrology*:
 
 ```bibtex
