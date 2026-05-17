@@ -48,7 +48,6 @@
   <br><em><strong>LarNO architecture for urban flood spatiotemporal forecasting.</strong>
     The model comprises three stages: (1) a lifting layer maps the input to a higher-dimensional hidden state; (2) N LarNO layers iteratively update the hidden state — each layer first applies a GRU-based convolutional update combining the previous time-step and previous-layer hidden states, then refines the state via frequency-domain Fourier transforms (forward FFT, low-mode linear mixing, inverse FFT) and a local time-domain linear operator; (3) a projection layer maps the final hidden state to the output water depth.</em>
 </p>
----
 
 ## Performance
 
