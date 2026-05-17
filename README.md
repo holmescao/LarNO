@@ -1,10 +1,8 @@
-# Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO
+# [(Journal of Hydrology 2026) Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO](https://doi.org/10.1016/j.jhydrol.2026.135686)
 
 <p align="center">
-  <a href="https://www.sciencedirect.com/journal/journal-of-hydrology"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Under%20Review-blue" alt="Journal of Hydrology"></a>
-  <a href="https://github.com/holmescao/LarNO"><img src="https://img.shields.io/github/stars/holmescao/LarNO?style=social" alt="GitHub Stars"></a>
+  <a href="https://doi.org/10.1016/j.jhydrol.2026.135686"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Published-blue" alt="Journal of Hydrology"></a>
   <a href="https://holmescao.github.io/datasets/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
-  <a href="https://huggingface.co/holmescao/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-LarNO-yellow" alt="HuggingFace Model"></a>
   <a href="https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
   <a href="https://github.com/holmescao/U-RNN"><img src="https://img.shields.io/badge/Related%20Work-U--RNN-brightgreen" alt="U-RNN"></a>
 </p>
@@ -18,30 +16,17 @@
 
 ---
 
-> **[Journal of Hydrology]** &nbsp;|&nbsp;
-> [Paper](#citation) &nbsp;|&nbsp;
-> [Dataset](https://holmescao.github.io/datasets/LarNO) &nbsp;|&nbsp;
-> [Pre-trained Weights (HuggingFace)](https://huggingface.co/holmescao/LarNO) &nbsp;|&nbsp;
-> [Pre-trained Weights (Google Drive)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) &nbsp;|&nbsp;
-> [Pre-trained Weights (Baidu Cloud, code: `LaNO`)](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) &nbsp;|&nbsp;
-> [Community Discussions](https://github.com/holmescao/LarNO/discussions)
+## Highlights
 
----
-
-> 🧪 **Want to try LarNO instantly — no installation needed?**
-> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)** to run inference on the Futian flood dataset with pre-trained weights in ~15 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
-
----
-
-> 🚀 **New to deep learning or don't have a GPU?**
-> You can train and test LarNO with **a single GPU** by renting one on [AutoDL](https://www.autodl.com/) for as little as ¥1–3/hour — no local hardware required.
-> A full step-by-step guide using the browser-based JupyterLab is provided in [Section 13 — Cloud GPU: AutoDL Guide](#13-cloud-gpu--autodl-guide). No extra software installation needed.
->
-> **Before you start:** download the dataset (see [Section 2 — Datasets](#2-datasets)) and pre-trained weights (see [Section 3 — Pre-trained Weights](#3-pre-trained-weights)) to your local machine first.
-
----
+- LarNO introduces a latent autoregressive neural operator for **zero-shot**, **high-resolution spatiotemporal generalization** in urban flood modeling.
+- Latent autoregression improves the representation of nonlinear spatiotemporal flood dynamics.
+- LarNO enables large-scale flood forecasting over **millions of grid cells** (~100 km2) at 5 m spatial and 5 min temporal resolution.
+- LarNO achieves **O(mm)-level water-depth accuracy**.
+- LarNO supports **multi-GPU distributed training** and **TensorRT-accelerated inference**.
 
 ## News
+
+- **[15/05/2026]** [LarNO](https://doi.org/10.1016/j.jhydrol.2026.135686) is now online in **Journal of Hydrology**!
 - **[12/03/2026]** Pre-trained weights and benchmark dataset published on **[HuggingFace](https://huggingface.co/holmescao/LarNO)** — download without Google Drive or Baidu Cloud.
 - **[12/03/2026]** Interactive demo released — run LarNO inference in your browser with **[Google Colab](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)**, no installation needed.
 - **[02/03/2026]** Full end-to-end reproduction tutorial released — train and test LarNO with **a single GPU on [AutoDL](https://www.autodl.com/)**.
@@ -62,27 +47,20 @@
   <br><em><strong>LarNO architecture for urban flood spatiotemporal forecasting.</strong>
     The model comprises three stages: (1) a lifting layer maps the input to a higher-dimensional hidden state; (2) N LarNO layers iteratively update the hidden state — each layer first applies a GRU-based convolutional update combining the previous time-step and previous-layer hidden states, then refines the state via frequency-domain Fourier transforms (forward FFT, low-mode linear mixing, inverse FFT) and a local time-domain linear operator; (3) a projection layer maps the final hidden state to the output water depth.</em>
 </p>
-
-
----
-
-## Abstract
-
-> *In urban areas, real-time early warning systems are used to mitigate the severe impacts of pluvial flooding. Although such systems have witnessed much recent development through the use of deep learning methods, urban-scale high-resolution modeling remains fundamentally constrained by the massive GPU memory demand for training neural networks. To overcome this bottleneck, we present LarNO, a memory-efficient, discretization-invariant neural operator that learns continuous-space hydrodynamic mappings to predict the spatiotemporal distributions of water depth based on dynamic rainfall and static topographic and drainage conditions. This approach enables zero-shot generalization to high resolution when trained solely on low-resolution data. Additionally, existing autoregressive neural operators compress complex dynamics into a single physical variable, leading to an information bottleneck in modeling complex nonlinear spatiotemporal dependencies. To resolve this, we embed spatiotemporal feature extractors into a neural operator to implement latent autoregression. Theoretically, we prove that our approach universally approximates continuous operators and enables zero-shot super-resolution generalization. An empirical case study of a highly urbanized region spanning nearly 100 km$^2$ in Shenzhen, China, subjected to observed rainfall events with spatiotemporal heterogeneity, demonstrates that LarNO achieves large-scale, high-resolution (5 m, 5 min), long-duration (6 h) urban flood real-time spatiotemporal forecasting to mm-level depth accuracy, reducing errors by more than half compared to state-of-the-art neural operators, while delivering two orders of magnitude faster inference speedup over a traditional hydrodynamic model. Besides, results from the ablation study validate the effectiveness of latent autoregression. Moreover, LarNO supports few-shot transfer to unseen catchments via fine-tuning. Furthermore, comprehensive parameter sensitivity analyses demonstrate the robustness and effectiveness of LarNO. Our work provides a groundbreaking framework for real-time early warning and refined management of large-scale urban flood events.*
-
-
 ---
 
 ## Performance
 
+### Futian benchmark
+
 Comparison on the Futian district (~100 km², Shenzhen) benchmark — **5 m resolution, zero-shot super-resolution** (trained at 20 m, tested at 5 m). Results from Table 1 of the paper.
 
-| Method | Params | Inference† | Speedup vs MIKE+ | MAE (m) ↓ | CSI ↑ |
-|---|---|---|---|---|---|
-| MIKE+ (hydraulic solver) | — | ~8.9 h | 1× | Reference | Reference |
-| UNO | 109.1 M | 710 s | ~570× | 0.024 ± 0.007 | 0.343 ± 0.026 |
-| FNO | 29.1 M | 760 s | ~530× | 0.019 ± 0.004 | 0.620 ± 0.027 |
-| **LarNO (ours)** | **29.1 M** | **34 s** ‡ | **~940×** | **0.008 ± 0.003** | **0.722 ± 0.016** |
+| Method                   | Params     | Inference† | Speedup vs MIKE+ | MAE (m) ↓         | CSI ↑             |
+| ------------------------ | ---------- | ---------- | ---------------- | ----------------- | ----------------- |
+| MIKE+ (hydraulic solver) | —          | ~8.9 h     | 1×               | Reference         | Reference         |
+| UNO                      | 109.1 M    | 710 s      | ~570×            | 0.024 ± 0.007     | 0.343 ± 0.026     |
+| FNO                      | 29.1 M     | 760 s      | ~530×            | 0.019 ± 0.004     | 0.620 ± 0.027     |
+| **LarNO (ours)**         | **29.1 M** | **34 s** ‡ | **~940×**        | **0.008 ± 0.003** | **0.722 ± 0.016** |
 
 > † Inference time for a single 6-hour flood event on NVIDIA RTX 4090.
 > ‡ LarNO inference uses **TensorRT (TRT)** acceleration; UNO and FNO do not support TRT.
@@ -90,12 +68,12 @@ Comparison on the Futian district (~100 km², Shenzhen) benchmark — **5 m reso
 
 ### UKEA benchmark (released dataset)
 
-LarNO fine-tuned from Futian pre-trained weights on the UKEA small case (`ukea_8m_5min`, 8 train events, 100 epochs). Evaluated on 12 test events.
+LarNO fine-tuned from Futian pre-trained weights on an unseen region (UKEA small case, `ukea_8m_5min`, 8 train events, 100 epochs). Evaluated on 12 test events.
 
-| Resolution | Setting | R² ↑ | MAE (m) ↓ | CSI ↑ | PeakR² ↑ |
-|---|---|---|---|---|---|
-| **8 m** | Fine-tune (train resolution) | **0.948 ± 0.056** | **0.0093 ± 0.0074** | **0.741 ± 0.030** | 0.949 ± 0.049 |
-| **2 m** | Zero-shot super-resolution (4×) | 0.776 ± 0.129 | 0.0163 ± 0.0101 | 0.515 ± 0.052 | 0.820 ± 0.101 |
+| Resolution | Setting                         | R² ↑              | MAE (m) ↓           | CSI ↑             | PeakR² ↑      |
+| ---------- | ------------------------------- | ----------------- | ------------------- | ----------------- | ------------- |
+| **8 m**    | Fine-tune (train resolution)    | **0.948 ± 0.056** | **0.0093 ± 0.0074** | **0.741 ± 0.030** | 0.949 ± 0.049 |
+| **2 m**    | Zero-shot super-resolution (4×) | 0.776 ± 0.129     | 0.0163 ± 0.0101     | 0.515 ± 0.052     | 0.820 ± 0.101 |
 
 > Zero-shot 2 m results use the model trained at 8 m — no 2 m data seen during training.
 
@@ -103,6 +81,7 @@ LarNO fine-tuned from Futian pre-trained weights on the UKEA small case (`ukea_8
 
 ## Table of Contents
 
+0. [Quick start](#0-quick-start)
 1. [Installation](#1-installation)
 2. [Datasets](#2-datasets)
 3. [Pre-trained Weights](#3-pre-trained-weights)
@@ -119,6 +98,23 @@ LarNO fine-tuned from Futian pre-trained weights on the UKEA small case (`ukea_8
 14. [License](#14-license)
 15. [FAQ](#15-faq)
 16. [Citation](#16-citation)
+
+---
+
+## 0. Quick start
+
+---
+
+> 🧪 **Want to try LarNO instantly — no installation needed?**
+> Open our **[Google Colab notebook](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)** to run inference on the Futian flood dataset with pre-trained weights in ~15 minutes, entirely in your browser. No GPU, no conda, no local setup required — just a free Google account.
+
+---
+
+> 🚀 **New to deep learning or don't have a GPU?**
+> You can train and test LarNO with **a single GPU** by renting one on [AutoDL](https://www.autodl.com/) for as little as ¥1–3/hour — no local hardware required.
+> A full step-by-step guide using the browser-based JupyterLab is provided in [Section 13 — Cloud GPU: AutoDL Guide](#13-cloud-gpu--autodl-guide). No extra software installation needed.
+>
+> **Before you start:** download the dataset (see [Section 2 — Datasets](#2-datasets)) and pre-trained weights (see [Section 3 — Pre-trained Weights](#3-pre-trained-weights)) to your local machine first.
 
 ---
 
@@ -183,31 +179,31 @@ LarNO is evaluated on two benchmark datasets. **We recommend starting with the s
 
 ### UKEA small case (`ukea_8m_5min`) — start here ✅
 
-| Property | Value |
-|---|---|
-| Area | ~0.4 km² (small coastal catchment, UK Environment Agency) |
-| Grid (train) | 50 × 120 at **8 m** resolution |
-| Grid (test) | 200 × 480 at **2 m** resolution (zero-shot super-resolution) |
-| Zero-shot super-resolution | **8 m → 2 m** (4× finer, no retraining) |
-| Training events | 8 |
-| Test events | 12 |
+| Property                   | Value                                                        |
+| -------------------------- | ------------------------------------------------------------ |
+| Area                       | ~0.4 km² (small coastal catchment, UK Environment Agency)    |
+| Grid (train)               | 50 × 120 at **8 m** resolution                               |
+| Grid (test)                | 200 × 480 at **2 m** resolution (zero-shot super-resolution) |
+| Zero-shot super-resolution | **8 m → 2 m** (4× finer, no retraining)                      |
+| Training events            | 8                                                            |
+| Test events                | 12                                                           |
 
 ### Futian large case (`region1_20m`) — for further research 🔬
 
-| Property | Value |
-|---|---|
-| Area | ~100 km² (Futian district, Shenzhen, China) |
-| Grid | 400 × 560 at **20 m** resolution |
-| Training events | 64 (full) / 16 (small subset) |
-| Test events | 16 |
+| Property        | Value                                       |
+| --------------- | ------------------------------------------- |
+| Area            | ~100 km² (Futian district, Shenzhen, China) |
+| Grid            | 400 × 560 at **20 m** resolution            |
+| Training events | 64 (full) / 16 (small subset)               |
+| Test events     | 16                                          |
 
 ### Download links
 
-| Mirror | Link |
-|---|---|
-| figshare | [10.6084/m9.figshare.30529031](https://doi.org/10.6084/m9.figshare.30529031) |
+| Mirror       | Link                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------ |
+| figshare     | [10.6084/m9.figshare.30529031.v4](https://doi.org/10.6084/m9.figshare.30529031.v4)                           |
 | Google Drive | [Download (no password)](https://drive.google.com/file/d/13VRExXwoFznTLIQKApn5O0_fxKsi8ThI/view?usp=sharing) |
-| HuggingFace | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO) |
+| HuggingFace  | [holmescao.github.io/datasets/LarNO](https://holmescao.github.io/datasets/LarNO)                             |
 
 📁 Unzip and place data so the directory tree looks like:
 
@@ -227,17 +223,17 @@ LarNO/
 
 ### File format
 
-| File | Shape | Unit | Description |
-|---|---|---|---|
-| `dem.npy` | `(H, W)` | metres | Digital Elevation Model. `NaN` = buildings. |
-| `rainfall.npy` | `(T, H, W)` | mm / 5 min | Rainfall intensity per 5-minute step. |
-| `h.npy` | `(T, H, W)` | metres | Ground-truth water depth from **MIKE+**. |
+| File           | Shape       | Unit       | Description                                 |
+| -------------- | ----------- | ---------- | ------------------------------------------- |
+| `dem.npy`      | `(H, W)`    | metres     | Digital Elevation Model. `NaN` = buildings. |
+| `rainfall.npy` | `(T, H, W)` | mm / 5 min | Rainfall intensity per 5-minute step.       |
+| `h.npy`        | `(T, H, W)` | metres     | Ground-truth water depth from **MIKE+**.    |
 
-| Location | H | W | T | Duration |
-|---|---|---|---|---|
-| `ukea_8m_5min` | 50 | 120 | 36 | 3 h (5-min steps) |
-| `ukea_2m_5min` | 200 | 480 | 36 | 3 h (5-min steps) |
-| `region1_20m` | 400 | 560 | 72 | 6 h (5-min steps) |
+| Location       | H   | W   | T   | Duration          |
+| -------------- | --- | --- | --- | ----------------- |
+| `ukea_8m_5min` | 50  | 120 | 36  | 3 h (5-min steps) |
+| `ukea_2m_5min` | 200 | 480 | 36  | 3 h (5-min steps) |
+| `region1_20m`  | 400 | 560 | 72  | 6 h (5-min steps) |
 
 > **Why does UKEA have T=36 while Futian has T=72?** The UKEA events cover a 3-hour simulation window; the Futian events cover 6 hours. Both use 5-minute time steps.
 
@@ -267,20 +263,20 @@ We provides a **Futian (region1_20m) pre-trained checkpoint**, trained to paper 
 
 The checkpoint uses the following architecture. Any config that loads it **must match these values exactly**; changing them will cause a weight-shape mismatch error.
 
-| Parameter | Value |
-|---|---|
-| `hidden_channels` | 32 |
-| `n_modes_height` | 100 |
-| `n_modes_width` | 140 |
-| `n_layers` | 4 |
+| Parameter         | Value |
+| ----------------- | ----- |
+| `hidden_channels` | 32    |
+| `n_modes_height`  | 100   |
+| `n_modes_width`   | 140   |
+| `n_layers`        | 4     |
 
 ### Download
 
-| Mirror | Link |
-|---|---|
-| HuggingFace | [holmescao/LarNO](https://huggingface.co/holmescao/LarNO) |
-| Google Drive | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
-| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) |
+| Mirror                     | Link                                                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| HuggingFace                | [holmescao/LarNO](https://huggingface.co/holmescao/LarNO)                                                       |
+| Google Drive               | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
+| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO)                                            |
 
 ### Placement
 
@@ -311,11 +307,11 @@ python test.py  --config <yaml_file>   # evaluation
 
 ### At-a-glance comparison
 
-| Config file | Use case | n_modes (H×W) | hidden_ch | n_layers | warm_up | n_epochs | finetune |
-|---|---|---|---|---|---|---|---|
-| **`ukea_finetune.yaml`** ✅ | Fine-tune Futian weights on UKEA | **100 × 140** (fixed) | 32 | 4 | 1 | 100 | **True** |
-| `ukea_scratch.yaml` | Train UKEA from scratch | 25 × 60 | 32 | 2 | 10 | 1000 | False |
-| `region1_scratch.yaml` | Train Futian / custom from scratch | 40 × 56 | 16 | 2 | 10 | 1000 | False |
+| Config file                | Use case                           | n_modes (H×W)         | hidden_ch | n_layers | warm_up | n_epochs | finetune |
+| -------------------------- | ---------------------------------- | --------------------- | --------- | -------- | ------- | -------- | -------- |
+| **`ukea_finetune.yaml`** ✅ | Fine-tune Futian weights on UKEA   | **100 × 140** (fixed) | 32        | 4        | 1       | 100      | **True** |
+| `ukea_scratch.yaml`        | Train UKEA from scratch            | 25 × 60               | 32        | 2        | 10      | 1000     | False    |
+| `region1_scratch.yaml`     | Train Futian / custom from scratch | 40 × 56               | 16        | 2        | 10      | 1000     | False    |
 
 > **Note:** The scratch configs use a lightweight architecture to reduce training time. To reproduce the paper's accuracy on region1, set `n_modes_height: 100`, `n_modes_width: 140`, `hidden_channels: 32`, `n_layers: 4` in the YAML.
 
@@ -583,13 +579,13 @@ Dry cells: white. Deeper inundation: darker blue (colorbar: 0–2 m).
 
 One Excel file per location, one row per event, plus an overall mean ± std row.
 
-| Metric | Physical meaning | Better when |
-|---|---|---|
-| **R²** | Variance explained (1.0 = perfect). | Higher |
-| **MSE / RMSE** | Mean / root-mean-squared depth error (m²/m). | Lower |
-| **MAE** | Mean absolute depth error (m). | Lower |
-| **PeakR²** | R² on peak inundation depth — critical for flood risk. | Higher |
-| **CSI** | Wet/dry classification index (threshold = `flood_threshold`, default 3 cm). | Higher |
+| Metric         | Physical meaning                                                            | Better when |
+| -------------- | --------------------------------------------------------------------------- | ----------- |
+| **R²**         | Variance explained (1.0 = perfect).                                         | Higher      |
+| **MSE / RMSE** | Mean / root-mean-squared depth error (m²/m).                                | Lower       |
+| **MAE**        | Mean absolute depth error (m).                                              | Lower       |
+| **PeakR²**     | R² on peak inundation depth — critical for flood risk.                      | Higher      |
+| **CSI**        | Wet/dry classification index (threshold = `flood_threshold`, default 3 cm). | Higher      |
 
 ---
 
@@ -597,11 +593,11 @@ One Excel file per location, one row per event, plus an overall mean ± std row.
 
 ### Config files overview
 
-| File | Purpose |
-|---|---|
-| `configs/ukea_finetune.yaml` | Fine-tune Futian pretrained → UKEA **(default)** |
-| `configs/ukea_scratch.yaml` | Train UKEA from random initialisation |
-| `configs/region1_scratch.yaml` | Train Futian / custom dataset from scratch |
+| File                           | Purpose                                          |
+| ------------------------------ | ------------------------------------------------ |
+| `configs/ukea_finetune.yaml`   | Fine-tune Futian pretrained → UKEA **(default)** |
+| `configs/ukea_scratch.yaml`    | Train UKEA from random initialisation            |
+| `configs/region1_scratch.yaml` | Train Futian / custom dataset from scratch       |
 
 ### Key parameters and when to change them
 
@@ -650,11 +646,11 @@ distributed:
 
 ### What are the 13 input channels?
 
-| Channels | Content |
-|---|---|
-| 1 – 6 | Past 6 rainfall fields (normalised) |
-| 7 – 12 | Past 6 cumulative-rainfall fields (normalised) |
-| 13 | DEM (normalised to [0, 1]) |
+| Channels | Content                                        |
+| -------- | ---------------------------------------------- |
+| 1 – 6    | Past 6 rainfall fields (normalised)            |
+| 7 – 12   | Past 6 cumulative-rainfall fields (normalised) |
+| 13       | DEM (normalised to [0, 1])                     |
 
 ---
 
@@ -800,10 +796,10 @@ pip install tensorly tensorly-torch "torch-harmonics==0.7.3" \
 
 ### 📥 Step 6 — Download pre-trained Futian weights
 
-| Mirror | Link |
-|---|---|
-| Google Drive | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
-| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO) |
+| Mirror                     | Link                                                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Google Drive               | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
+| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO)                                            |
 
 Upload to the cloud instance via SCP, then unzip:
 
@@ -988,15 +984,28 @@ A: The images are tracked in git under `code/urbanflood_larfno/assets/`. If they
 
 ## 16. Citation
 
-If you use LarNO in your research, please cite:
+If you use LarNO in your research, please cite the Journal of Hydrology article (DOI: [10.1016/j.jhydrol.2026.135686](https://doi.org/10.1016/j.jhydrol.2026.135686)):
 
 ```bibtex
-@article{larno2025,
-  title   = {Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO},
-  author  = {[TODO: authors]},
-  journal = {[TODO: journal]},
-  year    = {2025},
-  doi     = {[TODO: DOI]}
+@article{cao2026large,
+  title={Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO},
+  author={Cao, Xiaoyan and Yao, Yao and Wang, Zhi and Zhao, Zhangxinyue and Borthwick, Alistair GL and Qin, Huapeng},
+  journal={Journal of Hydrology},
+  pages={135686},
+  year={2026},
+  publisher={Elsevier}
+}
+```
+
+If you use the released benchmark dataset, please also cite:
+
+```bibtex
+@article{cao2025bench,
+author = {Cao, Xiaoyan and Qin, Huapeng},
+title = {Benchmark dataset of ``Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO''},
+year = {2025},
+url = "https://figshare.com/articles/dataset/Benchmark_dataset_of_Large-scale_urban_flood_modeling_and_zero-shot_high-resolution_generalization_with_LarNO_/30529031",
+doi = {10.6084/m9.figshare.30529031.v4}
 }
 ```
 
