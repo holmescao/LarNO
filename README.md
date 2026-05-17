@@ -59,8 +59,8 @@ Comparison on the Futian district (~100 km², Shenzhen) benchmark — **5 m reso
 | Method                   | Params     | Inference† | Speedup vs MIKE+ | MAE (m) ↓         | CSI ↑             |
 | ------------------------ | ---------- | ---------- | ---------------- | ----------------- | ----------------- |
 | MIKE+ (hydraulic solver) | —          | ~8.9 h     | 1×               | Reference         | Reference         |
-| UNO                      | 109.1 M    | 710 s      | ~570×            | 0.024 ± 0.007     | 0.343 ± 0.026     |
-| FNO                      | 29.1 M     | 760 s      | ~530×            | 0.019 ± 0.004     | 0.620 ± 0.027     |
+| UNO                      | 109.1 M    | 45 s       | ~710×            | 0.024 ± 0.007     | 0.343 ± 0.026     |
+| FNO                      | 29.1 M     | 42 s       | ~760×            | 0.019 ± 0.004     | 0.620 ± 0.027     |
 | **LarNO (ours)**         | **29.1 M** | **34 s** ‡ | **~940×**        | **0.008 ± 0.003** | **0.722 ± 0.016** |
 
 > † Inference time for a single 6-hour flood event on NVIDIA RTX 4090.
