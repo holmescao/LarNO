@@ -20,7 +20,7 @@
 
 - LarNO introduces a latent autoregressive neural operator for **zero-shot**, **high-resolution spatiotemporal generalization** in urban flood modeling.
 - Latent autoregression improves the representation of nonlinear spatiotemporal flood dynamics.
-- LarNO enables large-scale flood forecasting over **millions of grid cells** (~100 km2) at 5 m spatial and 5 min temporal resolution.
+- LarNO enables large-scale flood forecasting over **millions of grid cells** (~100 km2) and **sub-billion spatiotemporal points** (5 m and 5 min resolution).
 - LarNO achieves **O(mm)-level water-depth accuracy**.
 - LarNO supports **multi-GPU distributed training** and **TensorRT-accelerated inference**.
 
