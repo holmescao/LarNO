@@ -276,7 +276,7 @@ The checkpoint uses the following architecture. Any config that loads it **must 
 | -------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | HuggingFace                | [holmescao/LarNO](https://huggingface.co/holmescao/LarNO)                                                       |
 | Google Drive               | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
-| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO)                                            |
+| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1bJuO5sBdt6kNm5dwOl58WQ?pwd=LaNO)                                            |
 
 ### Placement
 
@@ -799,7 +799,7 @@ pip install tensorly tensorly-torch "torch-harmonics==0.7.3" \
 | Mirror                     | Link                                                                                                            |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Google Drive               | [Download (no password)](https://drive.google.com/file/d/1ITPoTWQkm5v9kdZT9fqza2Xd4a6Lc-0t/view?usp=drive_link) |
-| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1Iqz7UDoCYH0ioTyA-wrNeg?pwd=LaNO)                                            |
+| Baidu Cloud (code: `LaNO`) | [Download](https://pan.baidu.com/s/1bJuO5sBdt6kNm5dwOl58WQ?pwd=LaNO)                                            |
 
 Upload to the cloud instance via SCP, then unzip:
 
