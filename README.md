@@ -993,6 +993,7 @@ If you use LarNO in your research, please cite the Journal of Hydrology article 
   journal={Journal of Hydrology},
   pages={135686},
   year={2026},
+  doi={10.1016/j.jhydrol.2026.135686},
   publisher={Elsevier}
 }
 ```
