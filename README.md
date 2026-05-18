@@ -72,7 +72,7 @@ LarNO fine-tuned from Futian pre-trained weights on an unseen region (UKEA small
 
 | Resolution | Setting                         | R² ↑              | MAE (m) ↓           | CSI ↑             | PeakR² ↑      |
 | ---------- | ------------------------------- | ----------------- | ------------------- | ----------------- | ------------- |
-| **8 m**    | Fine-tune (train resolution)    | **0.948 ± 0.056** | **0.0093 ± 0.0074** | **0.741 ± 0.030** | 0.949 ± 0.049 |
+| **8 m**    | Fine-tune (train resolution)    | 0.948 ± 0.056     | 0.0093 ± 0.0074     | 0.741 ± 0.030     | 0.949 ± 0.049 |
 | **2 m**    | Zero-shot super-resolution (4×) | 0.776 ± 0.129     | 0.0163 ± 0.0101     | 0.515 ± 0.052     | 0.820 ± 0.101 |
 
 > Zero-shot 2 m results use the model trained at 8 m — no 2 m data seen during training.
