@@ -1,7 +1,7 @@
-# [(Journal of Hydrology 2026) Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO](https://doi.org/10.1016/j.jhydrol.2026.135686)
+# [(Journal of Hydrology 2026) Large-scale urban flood modeling and zero-shot high-resolution generalization with LarNO](https://authors.elsevier.com/c/1nAnn52cumnSP)
 
 <p align="center">
-  <a href="https://doi.org/10.1016/j.jhydrol.2026.135686"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Published-blue" alt="Journal of Hydrology"></a>
+  <a href="https://authors.elsevier.com/c/1nAnn52cumnSP"><img src="https://img.shields.io/badge/Journal%20of%20Hydrology-Published-blue" alt="Journal of Hydrology"></a>
   <a href="https://holmescao.github.io/datasets/LarNO"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-LarNO-orange" alt="HuggingFace Dataset"></a>
   <a href="https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
   <a href="https://github.com/holmescao/U-RNN"><img src="https://img.shields.io/badge/Related%20Work-U--RNN-brightgreen" alt="U-RNN"></a>
@@ -34,7 +34,7 @@
 
 ## News
 
-- **[15/05/2026]** 🎉🎉🎉[LarNO](https://doi.org/10.1016/j.jhydrol.2026.135686) is now online in **Journal of Hydrology**!
+- **[15/05/2026]** 🎉🎉🎉[LarNO](https://authors.elsevier.com/c/1nAnn52cumnSP) is now online in **Journal of Hydrology**! Free access is available until **July 17, 2026**.
 - **[12/03/2026]** Pre-trained weights and benchmark dataset published on **[HuggingFace](https://huggingface.co/holmescao/LarNO)** — download without Google Drive or Baidu Cloud.
 - **[12/03/2026]** Interactive demo released — run LarNO inference in your browser with **[Google Colab](https://colab.research.google.com/drive/1I9TDBCC0rQU3dKMujRCCm8hRMSumGe7E)**, no installation needed.
 - **[02/03/2026]** Full end-to-end reproduction tutorial released — train and test LarNO with **a single GPU on [AutoDL](https://www.autodl.com/)**.
