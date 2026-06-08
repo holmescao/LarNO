@@ -79,34 +79,6 @@ pip install -e . && pip install -r requirements.txt
 python test.py --config urbanflood_config_2d.yaml --expr_id 20260220_183648_006352
 ```
 
-## Performance
-
-### Futian benchmark
-
-Comparison on the Futian district (~100 km², Shenzhen) benchmark — **5 m resolution, zero-shot super-resolution** (trained at 20 m, tested at 5 m). Results from Table 1 of the paper.
-
-| Method                   | Params     | Inference† | Speedup vs MIKE+ | MAE (m) ↓         | CSI ↑             |
-| ------------------------ | ---------- | ---------- | ---------------- | ----------------- | ----------------- |
-| MIKE+ (hydraulic solver) | —          | ~8.9 h     | 1×               | Reference         | Reference         |
-| UNO                      | 109.1 M    | 45 s       | ~710×            | 0.024 ± 0.007     | 0.343 ± 0.026     |
-| FNO                      | 29.1 M     | 42 s       | ~760×            | 0.019 ± 0.004     | 0.620 ± 0.027     |
-| **LarNO (ours)**         | **29.1 M** | **34 s** ‡ | **~940×**        | **0.008 ± 0.003** | **0.722 ± 0.016** |
-
-> † Inference time for a single 6-hour flood event on NVIDIA RTX 4090.
-> ‡ LarNO inference uses **TensorRT (TRT)** acceleration; UNO and FNO do not support TRT.
-> **Note:** The released dataset is a **20 m downsampled version** for accessibility. Metrics on the released 20 m data will differ from the 5 m paper results above.
-
-### UKEA benchmark (released dataset)
-
-LarNO fine-tuned from Futian pre-trained weights on an unseen region (UKEA small case, `ukea_8m_5min`, 8 train events, 100 epochs). Evaluated on 12 test events.
-
-| Resolution | Setting                         | R² ↑              | MAE (m) ↓           | CSI ↑             | PeakR² ↑      |
-| ---------- | ------------------------------- | ----------------- | ------------------- | ----------------- | ------------- |
-| **8 m**    | Fine-tune (train resolution)    | 0.948 ± 0.056     | 0.0093 ± 0.0074     | 0.741 ± 0.030     | 0.949 ± 0.049 |
-| **2 m**    | Zero-shot super-resolution (4×) | 0.776 ± 0.129     | 0.0163 ± 0.0101     | 0.515 ± 0.052     | 0.820 ± 0.101 |
-
-> Zero-shot 2 m results use the model trained at 8 m — no 2 m data seen during training.
-
 ## 📚 Documentation
 
 Full reproduction tutorials live in **[`tutorials/`](tutorials/README.md)** — available in **English** and **中文**. Recommended order: Setup (1 → 3) → Inference (4) → Training (5).
